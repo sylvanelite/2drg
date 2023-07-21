@@ -1,0 +1,11 @@
+{
+  "name": "2dRG",
+  "scripts": {
+    "test": "",
+    "build": "tsc"
+  },
+  "author": "Sylvan",
+  "devDependencies": {
+  },
+  "version": "1.0.0"
+}

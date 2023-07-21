@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "outDir": "./build",
+    "sourceMap": true,
+    "target": "esnext",
+	"declaration":true,
+	"composite":true,
+    "rootDir":"./lib"
+  },
+  "include": ["./lib/**/*"],
+  "exclude": ["node_modules"]
+}

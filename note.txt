@@ -1,0 +1,21 @@
+https://jsfiddle.net/ARTsinn/uwdvs/
+
+generate map using rooms of multiples of 300x150 (screen 320x180)
+join at edges
+
+apply terrain modification as typed arrays, but only render current room
+
+objects:
+
+players
+0,1,2,3...
+
+enemies
+1,2,3,4....
+
+resources
+
+bullets
+
+collisions
+
