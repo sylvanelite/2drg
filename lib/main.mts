@@ -1,25 +1,14 @@
+//TODO:
+/*
+store terrain in backing typed array (bitmask) & flag if it's been changed
+on change, regenerate canvas mask for image to render
 
-type Points = Array<number>;//TODO: should be exactly 2 elements...
-//private functions
-class Rectangle{
-    x:number;
-    y:number;
-    w:number;
-    h:number;
-	grid:Array<Points>;
-	constructor (x:number, y:number, w:number, h:number) {
-		this.x = x;
-		this.y = y;
-		this.w = w;
-		this.h = h;
-        this.grid = [];
-		for (let x_ = 0; x_ < this.w; x_++) {
-			for (let y_ = 0; y_ < this.h; y_++) {
-				this.grid.push([this.x + x_, this.y + y_]);
-			}
-		}
-	}
-}
+query hit test by checking bitmask, not rendered pixel data (esp for rollback, screen may not be refreshed)
+
+split into rooms & grid, each update loop, update each room
+
+*/
+
 class Bitmap{
     imageData:ImageData;
     height:number;width:number;
@@ -43,14 +32,14 @@ class Bitmap{
             }
         }
     }
-    hitTest(rect:Rectangle) {
+    hitTest(x:number,y:number,w:number,h:number) {
         const color = "RGBA(0,255,0,255)";
-        for (let i = 0; i < rect.grid.length; i++) {
-            const x = rect.grid[i][0];
-            const y = rect.grid[i][1];
-            const pixel = get_pixel(x, y, this.imageData, -this.x, -this.y);
-            if (pixel === color) return true;
-        }
+		for (let x_ = 0; x_ < w; x_++) {
+			for (let y_ = 0; y_ < h; y_++) {
+                const pixel = get_pixel(x + x_, y+ y_, this.imageData, -this.x, -this.y);
+                if (pixel === color) return true;
+			}
+		}
         return false;
     }
 }
@@ -142,18 +131,18 @@ class WORMS{
         let i = 0;
         for (i = 0; i < 3; i++) {    
             if (this.left_key) {
-                if (!this.terrain_bmp.hitTest(new Rectangle(this.character_bmp.x , this.character_bmp.y, 1, 1))) {
+                if (!this.terrain_bmp.hitTest(this.character_bmp.x , this.character_bmp.y, 1, 1)) {
                     this.character_bmp.x -= 1;
                 }
-                while (this.terrain_bmp.hitTest(new Rectangle(this.character_bmp.x, this.character_bmp.y + 20, 10, 1))) {
+                while (this.terrain_bmp.hitTest(this.character_bmp.x, this.character_bmp.y + 20, 10, 1)) {
                     this.character_bmp.y -= 1;
                 }
             }
             if (this.right_key) {
-                if (!this.terrain_bmp.hitTest(new Rectangle(this.character_bmp.x + 10, this.character_bmp.y, 1, 1))) {
+                if (!this.terrain_bmp.hitTest(this.character_bmp.x + 10, this.character_bmp.y, 1, 1)) {
                     this.character_bmp.x += 1;
                 }
-                while (this.terrain_bmp.hitTest(new Rectangle(this.character_bmp.x, this.character_bmp.y + 20, 10, 1))) {
+                while (this.terrain_bmp.hitTest(this.character_bmp.x, this.character_bmp.y + 20, 10, 1)) {
                     this.character_bmp.y -= 1;
                 }
             }
@@ -166,7 +155,7 @@ class WORMS{
         if (this.character_speed > 0) {
             //check ground
             for (i = 0; i < this.character_speed; i++) {
-                if (!this.terrain_bmp.hitTest(new Rectangle(this.character_bmp.x, this.character_bmp.y + 20, 10, 1))) {
+                if (!this.terrain_bmp.hitTest(this.character_bmp.x, this.character_bmp.y + 20, 10, 1)) {
                     this.character_bmp.y += 1;
                 } else {
                     this.jumping = false;
@@ -175,7 +164,7 @@ class WORMS{
             }
         } else {
             for (i = 0; i < Math.abs(this.character_speed); i++) {
-                if (!this.terrain_bmp.hitTest(new Rectangle(this.character_bmp.x, this.character_bmp.y, 10, 1))) {
+                if (!this.terrain_bmp.hitTest(this.character_bmp.x, this.character_bmp.y, 10, 1)) {
                     this.character_bmp.y -= 1;
                 } else {
                     this.character_speed = 0;
