@@ -85,11 +85,12 @@ class Terrain {
         terrain.#isRendered = false;
         //TODO: use bitmasks instead?
         const radius = Math.floor(diameter/2);
+        const radiusSquared = radius*radius;
         for(let i=x-radius;i<x+radius;i+=1){
             for(let j=y-radius;j<y+radius;j+=1){
                 if(i>0&&i<terrain.width-1&& j>0&&j<terrain.height-1){
-                        const dist = Math.sqrt( (x-i)*(x-i) + (y-j)*(y-j) );
-                        if(dist<radius){//clear pixels in 30px radius
+                        const distSquared = (x-i)*(x-i) + (y-j)*(y-j);
+                        if(distSquared<radiusSquared){//clear pixels in 30px radius
                             Terrain.#setBit(false,i,j,terrain);
                         }
                     }
