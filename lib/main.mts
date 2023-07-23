@@ -134,8 +134,6 @@ class Terrain {
 
 class WORMS{
     ctx:CanvasRenderingContext2D;
-    width:number;
-    height:number;
     character_bmp:Bitmap;
     jumping:Boolean;
     left_key:Boolean;right_key:Boolean;space_key:Boolean;
@@ -144,8 +142,6 @@ class WORMS{
     terrain:Terrain;
     constructor(canvas:HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d");
-        this.width = canvas.width;
-        this.height = canvas.height;
         this.terrain = new Terrain(1);
         const character_bmpd = this.ctx.createImageData(10, 20);
         this.character_bmp = new Bitmap(character_bmpd);
@@ -169,9 +165,6 @@ class WORMS{
         Terrain.fillRect(this.terrain,0,50,300,100);
         this.character_bmp.x = 100;
         this.character_bmp.y = 20;
-        const buffer = document.createElement('canvas');
-        buffer.height = this.height;
-        buffer.width = this.width;
     }
     updateLoop() {
         this.move_character();
@@ -180,7 +173,7 @@ class WORMS{
         }, 1000 / 30); //the loop
     }
     renderLoop() {
-        wormsInstance.ctx.clearRect(0, 0, wormsInstance.width, wormsInstance.height);
+        wormsInstance.ctx.clearRect(0, 0, wormsInstance.ctx.canvas.width, wormsInstance.ctx.canvas.height);
         Terrain.draw(wormsInstance.ctx,wormsInstance.terrain);
         wormsInstance.ctx.putImageData(wormsInstance.character_bmp.imageData, wormsInstance.character_bmp.x, wormsInstance.character_bmp.y);
         window.requestAnimationFrame(wormsInstance.renderLoop);
