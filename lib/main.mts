@@ -132,7 +132,7 @@ class Entity{
                 }
             }
         }
-        //move between rooms...
+        //move between rooms, going off one side means going onto another
         const buffer = 3;
         if(entity.position.x<0 && room.x>0){
             const idx = xyToIdx(room.x-1,room.y,wormsInstance.worldWidth);
@@ -146,6 +146,20 @@ class Entity{
             const targetRoom = wormsInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=buffer;
+            wormsInstance.currentRoom = idx;
+        }
+        if(entity.position.y<0 && room.y>0){
+            const idx = xyToIdx(room.x,room.y-1,wormsInstance.worldWidth);
+            const targetRoom = wormsInstance.rooms[idx];
+            Room.MoveEntity(room,targetRoom,entity);
+            entity.position.y=room.terrain.height-entity.size.y-buffer;
+            wormsInstance.currentRoom = idx;
+        }
+        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<wormsInstance.worldWidth-1){
+            const idx = xyToIdx(room.x,room.y+1,wormsInstance.worldWidth);
+            const targetRoom = wormsInstance.rooms[idx];
+            Room.MoveEntity(room,targetRoom,entity);
+            entity.position.y =buffer;
             wormsInstance.currentRoom = idx;
         }
     }
