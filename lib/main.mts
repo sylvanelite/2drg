@@ -31,6 +31,7 @@
 }*/
 
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
+import { NetplayInput } from "./netPeer/types.mjs";
 
 /*
 TODO:
@@ -96,7 +97,7 @@ class Entity{
         const controls =Game.inputs.get(entity.uid);
         let i = 0;
         for (i = 0; i < 3; i+=1) {    
-            if ( gameInstance.inputReader.held(controls,CONTROLS.LEFT)) {
+            if ( NetplayInput.getHeld(controls,CONTROLS.LEFT)) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
                     entity.position.x -= 1;
                 }
@@ -104,7 +105,7 @@ class Entity{
                     entity.position.y -= 1;
                 }
             }
-            if (gameInstance.inputReader.held(controls,CONTROLS.RIGHT)) {
+            if (NetplayInput.getHeld(controls,CONTROLS.RIGHT)) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x + 10, entity.position.y, 1, 1)) {
                     entity.position.x += 1;
                 }
@@ -113,7 +114,7 @@ class Entity{
                 }
             }
         }
-        if (gameInstance.inputReader.held(controls,CONTROLS.JUMP)) {
+        if (NetplayInput.getHeld(controls,CONTROLS.JUMP)) {
             entity.velocity.y = -10;
             //gameInstance.jumping = true;//TODO: fix jumping
         }
@@ -168,10 +169,10 @@ class Entity{
             gameInstance.currentRoom = idx;
         }
         //==shooting (TODO: spawn bullet & bresenham)
-        /*//TODO: mouse position needs to take in a uid...
-        const x = gameInstance.inputReader.mousePosition
-        Terrain.clearCircle(wormsInstance.rooms[wormsInstance.currentRoom].terrain,x,y,30);
-        */
+        if (controls.mousePosition&& NetplayInput.getReleased(controls,CONTROLS.SHOOT) ) {
+            const mousePos =controls.mousePosition;
+            Terrain.clearCircle(room.terrain,mousePos.x,mousePos.y,30);
+        }
 
     }
 }
@@ -219,11 +220,12 @@ class Room{
             const ent = room.entities[i];
             Entity.draw(ctx,ent);
         }
-        const mouse = gameInstance.inputReader.mousePosition;
-        if(mouse){
+        
+        const controls =Game.inputs.get(gameInstance.playerUid);
+        if(controls.mousePosition){
             ctx.strokeStyle = '1px solid black';
             ctx.beginPath();
-            ctx.arc(mouse.x,mouse.y,10,0,Math.PI*2);
+            ctx.arc(controls.mousePosition.x,controls.mousePosition.y,10,0,Math.PI*2);
             ctx.stroke();
         }
     }
@@ -334,16 +336,16 @@ const idxToXy = (idx:number,width:number)=>{
     ];
 }
 class Game{
-    inputReader:KeyboardAndMouseInputReader;
+    #inputReader:KeyboardAndMouseInputReader;
     ctx:CanvasRenderingContext2D;
     rooms:Array<Room>;
     currentRoom:number;//room for the local player
     worldWidth:number;
     playerUid:number;
-    static inputs = new Map();
+    static inputs = new Map<number,NetplayInput>();
     constructor(canvas:HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d");
-        this.inputReader = new KeyboardAndMouseInputReader(canvas);
+        this.#inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldWidth = 128;
         for(let i=0;i<this.worldWidth;i+=1){
@@ -363,11 +365,11 @@ class Game{
         this.init_objects(); //init the objects
         
         //note:bindings is a bitmask, should cap at ~32 
-        this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
-        this.inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
-        this.inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
-        this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
-        this.inputReader.bindings.set('mouse_1', CONTROLS.SHOOT);
+        this.#inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
+        this.#inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
+        this.#inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
+        this.#inputReader.bindings.set('Space', CONTROLS.SHOOT);
+        this.#inputReader.bindings.set('mouse_1', CONTROLS.SHOOT);
         
         Game.updateLoop();
         Game.renderLoop();
@@ -382,8 +384,8 @@ class Game{
     }
     static updateLoop() {
         //TODO: feed in input via rollback...
-        gameInstance.inputReader.getInput();
-        const inputs = gameInstance.inputReader.getInput();
+        gameInstance.#inputReader.getInput();
+        const inputs = gameInstance.#inputReader.getInput();
         Game.inputs.clear();
         Game.inputs.set(gameInstance.playerUid,inputs);//Player id:0
         
