@@ -30,36 +30,37 @@
 	}
 }*/
 
+import { KeyboardAndMouseInputReader } from "./inputController.mjs";
+
 /*
 TODO:
-store players globally
-on update()
-read player input, for each player, update player.room
-
-//--example:
-for each room
-    room.update()
-
-in:room.update()
-    if playerCount<1   return
-    //on add(), if ent.kind == player, playerCount +=1
-    //on remove(), if ent.kind == player, playerCount-=1;
-
-    //on entity create() if kind == player, re-initialise current room if player count == 0??
+mobs, peer, rollback, bullets,
+movement that doesn't snap Y
+input per player
+mouse aiming
+test cases
+better rendering
+UI
+terrain generation
 */
 
+const CONTROLS={
+    LEFT:1,
+    RIGHT:2,
+    JUMP:3,
+    SHOOT:4
+};
 enum EntityKind{
-    Player1 = 1,
-    Player2 = 2,
-    Player3 = 3,
-    Player4 = 4,//TODO: more than 4 players
+    Player = 1,
     Enemy = 10,
     Bullet = 100,
     Resource = 1000,
 }
 class Entity{
-    id:number;
-    kind:EntityKind;
+    static uid=0;
+    uid:number;//globally unique id, preserved across room boundaries
+    roomId:number;//index location in the room array, changes with room operations: insert/delete/move
+    kind:EntityKind;//how the entity is controlled
     hp:number;
     maxHp:number;
     sprite:number;
@@ -68,7 +69,10 @@ class Entity{
     velocity:{x:number,y:number};
     size:{x:number,y:number};
     constructor(){
-        this.id=0;this.kind = EntityKind.Enemy;
+        this.uid = Entity.uid;
+        Entity.uid+=1;
+        this.roomId=0;
+        this.kind = EntityKind.Enemy;
         this.hp=0;
         this.maxHp=100;
         this.sprite=0;
@@ -78,10 +82,10 @@ class Entity{
         this.size={x:10,y:20};
     }
     static update(room:Room,entity:Entity){
-        if(entity.kind == EntityKind.Player1){
+        //TODO:options for all ent.kind
+        if(entity.kind == EntityKind.Player){
             Entity.move_character(room,entity);
         }
-//TODO:ent.kind
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         //TODO:ent.kind
@@ -89,9 +93,10 @@ class Entity{
         ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
     }
     static move_character(room:Room,entity:Entity) {
+        const controls =Game.inputs.get(entity.uid);
         let i = 0;
         for (i = 0; i < 3; i+=1) {    
-            if (wormsInstance.left_key) {
+            if ( gameInstance.inputReader.held(controls,CONTROLS.LEFT)) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
                     entity.position.x -= 1;
                 }
@@ -99,7 +104,7 @@ class Entity{
                     entity.position.y -= 1;
                 }
             }
-            if (wormsInstance.right_key) {
+            if (gameInstance.inputReader.held(controls,CONTROLS.RIGHT)) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x + 10, entity.position.y, 1, 1)) {
                     entity.position.x += 1;
                 }
@@ -108,9 +113,9 @@ class Entity{
                 }
             }
         }
-        if (wormsInstance.space_key && !wormsInstance.jumping) {
+        if (gameInstance.inputReader.held(controls,CONTROLS.JUMP)) {
             entity.velocity.y = -10;
-            wormsInstance.jumping = true;
+            //gameInstance.jumping = true;//TODO: fix jumping
         }
         entity.velocity.y+=1; //is this going to work prooperly?
         if (entity.velocity.y > 0) {
@@ -119,7 +124,7 @@ class Entity{
                 if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + 20, 10, 1)) {
                     entity.position.y += 1;
                 } else {
-                    wormsInstance.jumping = false;
+                    //gameInstance.jumping = false;//TODO: fix jumping
                     entity.velocity.y = 0;
                 }
             }
@@ -135,33 +140,39 @@ class Entity{
         //move between rooms, going off one side means going onto another
         const buffer = 3;
         if(entity.position.x<0 && room.x>0){
-            const idx = xyToIdx(room.x-1,room.y,wormsInstance.worldWidth);
-            const targetRoom = wormsInstance.rooms[idx];
+            const idx = xyToIdx(room.x-1,room.y,gameInstance.worldWidth);
+            const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=room.terrain.width-entity.size.x-buffer;
-            wormsInstance.currentRoom = idx;
+            gameInstance.currentRoom = idx;
         }
-        if(entity.position.x+entity.size.x > room.terrain.width&& room.x<wormsInstance.worldWidth-1){
-            const idx = xyToIdx(room.x+1,room.y,wormsInstance.worldWidth);
-            const targetRoom = wormsInstance.rooms[idx];
+        if(entity.position.x+entity.size.x > room.terrain.width&& room.x<gameInstance.worldWidth-1){
+            const idx = xyToIdx(room.x+1,room.y,gameInstance.worldWidth);
+            const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=buffer;
-            wormsInstance.currentRoom = idx;
+            gameInstance.currentRoom = idx;
         }
         if(entity.position.y<0 && room.y>0){
-            const idx = xyToIdx(room.x,room.y-1,wormsInstance.worldWidth);
-            const targetRoom = wormsInstance.rooms[idx];
+            const idx = xyToIdx(room.x,room.y-1,gameInstance.worldWidth);
+            const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y=room.terrain.height-entity.size.y-buffer;
-            wormsInstance.currentRoom = idx;
+            gameInstance.currentRoom = idx;
         }
-        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<wormsInstance.worldWidth-1){
-            const idx = xyToIdx(room.x,room.y+1,wormsInstance.worldWidth);
-            const targetRoom = wormsInstance.rooms[idx];
+        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<gameInstance.worldWidth-1){
+            const idx = xyToIdx(room.x,room.y+1,gameInstance.worldWidth);
+            const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y =buffer;
-            wormsInstance.currentRoom = idx;
+            gameInstance.currentRoom = idx;
         }
+        //==shooting (TODO: spawn bullet & bresenham)
+        /*//TODO: mouse position needs to take in a uid...
+        const x = gameInstance.inputReader.mousePosition
+        Terrain.clearCircle(wormsInstance.rooms[wormsInstance.currentRoom].terrain,x,y,30);
+        */
+
     }
 }
 class Room{
@@ -184,7 +195,7 @@ class Room{
     }
     static AddEntity(room:Room,entity:Entity){
         if(room.maxEntities>=Room.MAX_ENTIES){console.warn('max entities');return;}
-        entity.id=room.maxEntities;
+        entity.roomId=room.maxEntities;
         room.entities[room.maxEntities] = entity;//TODO: instead of overwriting, could copy props
         room.maxEntities+=1;
     }
@@ -192,8 +203,8 @@ class Room{
         //swap & pop, assumes iterating backwards
         if(room.maxEntities<=1){room.maxEntities=0;return;}//base case 1 or 0, nothing to remove
         const lastEntity = room.entities[room.maxEntities-1];//sawp current with last
-        room.entities[entity.id] = lastEntity;//TODO: instead of overwriting, could copy props
-        lastEntity.id = entity.id;
+        room.entities[entity.roomId] = lastEntity;//TODO: instead of overwriting, could copy props
+        lastEntity.roomId = entity.roomId;
         room.maxEntities-=1;
     }
     static update(room:Room){
@@ -207,6 +218,13 @@ class Room{
         for(let i=room.maxEntities-1;i>=0;i-=1){
             const ent = room.entities[i];
             Entity.draw(ctx,ent);
+        }
+        const mouse = gameInstance.inputReader.mousePosition;
+        if(mouse){
+            ctx.strokeStyle = '1px solid black';
+            ctx.beginPath();
+            ctx.arc(mouse.x,mouse.y,10,0,Math.PI*2);
+            ctx.stroke();
         }
     }
 
@@ -315,17 +333,17 @@ const idxToXy = (idx:number,width:number)=>{
         Math.floor(idx/width)//y
     ];
 }
-class WORMS{
+class Game{
+    inputReader:KeyboardAndMouseInputReader;
     ctx:CanvasRenderingContext2D;
     rooms:Array<Room>;
-    jumping:Boolean;
-    left_key:Boolean;right_key:Boolean;space_key:Boolean;
-    keys:Array<string>;
-    playerId:EntityKind;
     currentRoom:number;//room for the local player
     worldWidth:number;
+    playerUid:number;
+    static inputs = new Map();
     constructor(canvas:HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d");
+        this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldWidth = 128;
         for(let i=0;i<this.worldWidth;i+=1){
@@ -340,65 +358,57 @@ class WORMS{
                 this.rooms.push(r);
             }
         }
-        document.onkeydown = this.key_down;
-        document.onkeyup = this.key_up;
-        document.onmouseup = this.mouse_up;
-        this.jumping = false;
-        this.left_key = false;
-        this.right_key = false;
-        this.space_key = false;
-        this.keys = [];
-        this.playerId = EntityKind.Player1;//TODO: set this to be your local ID...
     }
     init(){
         this.init_objects(); //init the objects
-        WORMS.updateLoop();
-        WORMS.renderLoop();
+        
+        //note:bindings is a bitmask, should cap at ~32 
+        this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
+        this.inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
+        this.inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
+        this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('mouse_1', CONTROLS.SHOOT);
+        
+        Game.updateLoop();
+        Game.renderLoop();
     }
     init_objects() {
         this.currentRoom = 500;
         const startingRoom  = this.rooms[this.currentRoom];
-        const player1 = new Entity();//TODO: real init...
-        player1.kind = this.playerId;
-        Room.AddEntity(startingRoom,player1);
+        const playerEntity = new Entity();//TODO: real init...
+        playerEntity.kind = EntityKind.Player;
+        this.playerUid = playerEntity.uid;//TODO: get player number for actual local player
+        Room.AddEntity(startingRoom,playerEntity);
     }
     static updateLoop() {
-        for(const room of wormsInstance.rooms){
+        //TODO: feed in input via rollback...
+        gameInstance.inputReader.getInput();
+        const inputs = gameInstance.inputReader.getInput();
+        Game.inputs.clear();
+        Game.inputs.set(gameInstance.playerUid,inputs);//Player id:0
+        
+        //--update loop below
+        for(const room of gameInstance.rooms){
             Room.update(room);
         }
         setTimeout(function () {
-            WORMS.updateLoop();
+            Game.updateLoop();
         }, 1000 / 30); //the loop
     }
     static renderLoop() {
-        wormsInstance.ctx.clearRect(0, 0, wormsInstance.ctx.canvas.width, wormsInstance.ctx.canvas.height);
-        const currentRoom = wormsInstance.rooms[wormsInstance.currentRoom];
-        Room.draw(wormsInstance.ctx,currentRoom);
-        window.requestAnimationFrame(WORMS.renderLoop);
-    }
-    mouse_up(e:MouseEvent) {
-        const x = e.offsetX, y = e.offsetY;
-        Terrain.clearCircle(wormsInstance.rooms[wormsInstance.currentRoom].terrain,x,y,30);
-    }
-    key_down(e:KeyboardEvent) {
-        const KeyID = e.key;
-        if (KeyID === "ArrowLeft") wormsInstance.left_key = true;
-        if (KeyID === "ArrowRight") wormsInstance.right_key = true;
-        if (KeyID === "ArrowUp" || KeyID === " ") wormsInstance.space_key = true;
-    }
-    key_up = function (e:KeyboardEvent) {
-        const KeyID = e.key;
-        if (KeyID === "ArrowLeft") wormsInstance.left_key = false;
-        if (KeyID === "ArrowRight") wormsInstance.right_key = false;
-        if (KeyID === "ArrowUp" || KeyID === " ") wormsInstance.space_key = false;
+        gameInstance.ctx.clearRect(0, 0, gameInstance.ctx.canvas.width, gameInstance.ctx.canvas.height);
+        const currentRoom = gameInstance.rooms[gameInstance.currentRoom];
+        Room.draw(gameInstance.ctx,currentRoom);
+        window.requestAnimationFrame(Game.renderLoop);
     }
 }
-let wormsInstance:WORMS =null;
+let gameInstance:Game =null;
 class Main {
 	static init (){	
 		const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-		wormsInstance = new WORMS(canvas);
-        wormsInstance.init();
+		gameInstance = new Game(canvas);
+        gameInstance.init();
+        console.log(gameInstance);
 	}
 }
 export {Main};
