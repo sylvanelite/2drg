@@ -369,7 +369,7 @@ class Game{
         this.#inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
         this.#inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
         this.#inputReader.bindings.set('Space', CONTROLS.SHOOT);
-        this.#inputReader.bindings.set('mouse_1', CONTROLS.SHOOT);
+        this.#inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
         
         Game.updateLoop();
         Game.renderLoop();

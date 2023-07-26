@@ -52,13 +52,10 @@ class KeyboardAndMouseInputReader extends InputReader {
           (e) => {
             /*
 //TODO: need to bit-check the mosue buttons:
-//https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons            
-0: No button or un-initialized
-1: Primary button (usually the left button)
-2: Secondary button (usually the right button)
-4: Auxiliary button (usually the mouse wheel button or middle button)
-8: 4th button (typically the "Browser Back" button)
-16 : 5th button (typically the "Browser Forward" button) */
+//https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button         
+0: left button
+1: middle button
+2: right button*/
             if(!this.bindings.has("mouse_"+e.button)){return;}
             const bind = this.bindings.get("mouse_"+e.button);
             NetplayInput.setPressed(this.keyboardInput,bind);
@@ -67,7 +64,8 @@ class KeyboardAndMouseInputReader extends InputReader {
           false );
           canvas.addEventListener( "mouseup",
             (e) => {
-                if(!this.bindings.has("mouse"+e.button)){return;}
+                console.log(e,this.bindings,"mouse_"+e.button)
+                if(!this.bindings.has("mouse_"+e.button)){return;}
                 const bind = this.bindings.get("mouse_"+e.button);
                 NetplayInput.clearPressed(this.keyboardInput,bind);
                 NetplayInput.setReleased(this.keyboardInput,bind);
