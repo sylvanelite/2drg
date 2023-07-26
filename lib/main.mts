@@ -97,7 +97,7 @@ class Entity{
         const controls =Game.inputs.get(entity.uid);
         let i = 0;
         for (i = 0; i < 3; i+=1) {    
-            if ( NetplayInput.getHeld(controls,CONTROLS.LEFT)) {
+            if ( NetplayInput.getPressed(controls,CONTROLS.LEFT)) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
                     entity.position.x -= 1;
                 }
@@ -105,7 +105,7 @@ class Entity{
                     entity.position.y -= 1;
                 }
             }
-            if (NetplayInput.getHeld(controls,CONTROLS.RIGHT)) {
+            if (NetplayInput.getPressed(controls,CONTROLS.RIGHT)) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x + 10, entity.position.y, 1, 1)) {
                     entity.position.x += 1;
                 }
@@ -114,7 +114,7 @@ class Entity{
                 }
             }
         }
-        if (NetplayInput.getHeld(controls,CONTROLS.JUMP)) {
+        if (NetplayInput.getPressed(controls,CONTROLS.JUMP)) {
             entity.velocity.y = -10;
             //gameInstance.jumping = true;//TODO: fix jumping
         }

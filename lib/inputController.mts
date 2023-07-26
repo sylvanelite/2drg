@@ -5,7 +5,6 @@ abstract class InputReader {
                                           //action name is an index into a bitmask for each key
   inputMap:Map<number,NetplayInput> = new Map();//map from playerId to their input
   pressed(input:NetplayInput,key:number):boolean{ return NetplayInput.getPressed(input,key); }
-  held(input:NetplayInput,key:number):boolean{ return NetplayInput.getHeld(input,key); }
   released(input:NetplayInput,key:number):boolean{ return NetplayInput.getReleased(input,key); }
   abstract getInput(): NetplayInput;
 }
@@ -37,11 +36,11 @@ class KeyboardAndMouseInputReader extends InputReader {
         super();
       this.canvas = canvas;
       canvas.addEventListener( "mouseenter",
-        (e) => this.updateMousePosition(e),
+        (e) =>{this.mousePosition = this.projectClientPosition( e.clientX,  e.clientY);},
         false );
   
       canvas.addEventListener( "mousemove",
-        (e) => this.updateMousePosition(e),
+      (e) =>{this.mousePosition = this.projectClientPosition( e.clientX,  e.clientY);},
         false );
   
       canvas.addEventListener( "mouseleave",
@@ -62,7 +61,6 @@ class KeyboardAndMouseInputReader extends InputReader {
 16 : 5th button (typically the "Browser Forward" button) */
             if(!this.bindings.has("mouse_"+e.button)){return;}
             const bind = this.bindings.get("mouse_"+e.button);
-            NetplayInput.setHeld(this.keyboardInput,bind);
             NetplayInput.setPressed(this.keyboardInput,bind);
             NetplayInput.clearReleased(this.keyboardInput,bind);
           },
@@ -71,7 +69,6 @@ class KeyboardAndMouseInputReader extends InputReader {
             (e) => {
                 if(!this.bindings.has("mouse"+e.button)){return;}
                 const bind = this.bindings.get("mouse_"+e.button);
-                NetplayInput.clearHeld(this.keyboardInput,bind);
                 NetplayInput.clearPressed(this.keyboardInput,bind);
                 NetplayInput.setReleased(this.keyboardInput,bind);
             },
@@ -81,24 +78,17 @@ class KeyboardAndMouseInputReader extends InputReader {
           if (event.repeat) return;
           if(!this.bindings.has(event.code)){return;}
           const bind = this.bindings.get(event.code);
-          NetplayInput.setHeld(this.keyboardInput,bind);
           NetplayInput.setPressed(this.keyboardInput,bind);
           NetplayInput.clearReleased(this.keyboardInput,bind);
         }, false );
       root.addEventListener( "keyup", (event) => {
           if(!this.bindings.has(event.code)){return;}
           const bind = this.bindings.get(event.code);
-          NetplayInput.clearHeld(this.keyboardInput,bind);
           NetplayInput.clearPressed(this.keyboardInput,bind);
           NetplayInput.setReleased(this.keyboardInput,bind);
         }, false );
     }
-  
-    updateMousePosition(event: MouseEvent) {
-      this.mousePosition = this.projectClientPosition(
-      event.clientX,
-      event.clientY);
-    }
+
   
     getInput(): NetplayInput {
       let input = new NetplayInput();
@@ -108,7 +98,6 @@ class KeyboardAndMouseInputReader extends InputReader {
             y:this.mousePosition.y
         }
       }
-      input.keysHeld = this.keyboardInput.keysHeld;
       input.keysPressed = this.keyboardInput.keysPressed;
       input.keysReleased = this.keyboardInput.keysReleased;
       return input;

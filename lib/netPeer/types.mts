@@ -22,29 +22,24 @@ class NetplayInput {
         return res;
     }
     serialize(): string {
-        return this.keysPressed+','+this.keysHeld+','+this.keysReleased+','+
+        return this.keysPressed+','+','+this.keysReleased+','+
                 (this.mousePosition?.x??-1)+','+(this.mousePosition?.x??-1);
     }
     deserialize(jsonStr: string): void {
-        const [press,held,release,mousex,mousey] = jsonStr.split(',').map(x=>Number(x));
+        const [press,release,mousex,mousey] = jsonStr.split(',').map(x=>Number(x));
         this.keysPressed = press;
-        this.keysHeld = held;
         this.keysReleased = release;
         if(mousex>=0&&mousey>=0){
             this.mousePosition = {x:mousex,y:mousey};
         }
     }
     static setPressed(ipt:NetplayInput,key:number){ ipt.keysPressed = BIT_SET(ipt.keysPressed,key); }
-    static setHeld(ipt:NetplayInput,key:number){ ipt.keysHeld = BIT_SET(ipt.keysHeld,key); }
     static setReleased(ipt:NetplayInput,key:number){ ipt.keysReleased = BIT_SET(ipt.keysReleased,key); }
     static clearPressed(ipt:NetplayInput,key:number){ ipt.keysPressed = BIT_CLEAR(ipt.keysPressed,key); }
-    static clearHeld(ipt:NetplayInput,key:number){ ipt.keysHeld = BIT_CLEAR(ipt.keysHeld,key); }
     static clearReleased(ipt:NetplayInput,key:number){ ipt.keysReleased = BIT_CLEAR(ipt.keysReleased,key); }
     static getPressed(ipt:NetplayInput,key:number){ return ipt&& BIT_CHECK(ipt.keysPressed,key); }
-    static getHeld(ipt:NetplayInput,key:number){ return ipt&&BIT_CHECK(ipt.keysHeld,key); }
     static getReleased(ipt:NetplayInput,key:number){ return ipt&&BIT_CHECK(ipt.keysReleased,key); }
     keysPressed: number = 0;
-    keysHeld: number = 0;
     keysReleased:number  = 0;
     mousePosition?: { x: number; y: number };
 }
