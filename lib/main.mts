@@ -492,25 +492,6 @@ class Entity{
             }
         }
     }
-    static apply(source:Entity,destination:Entity){
-        //copies one entitie's values into another
-        destination.roomId = source.roomId;
-        destination.uid=source.uid;
-        destination.roomId=source.roomId;
-        destination.kind=source.kind;
-        destination.euqipped=source.euqipped;
-        destination.hp=source.hp;
-        destination.maxHp=source.maxHp;
-        destination.cooldown=source.cooldown;
-        destination.sprite=source.sprite;
-        destination.spriteFrame=source.spriteFrame;
-        destination.position.x=source.position.x;
-        destination.position.y=source.position.y;
-        destination.velocity.x=source.velocity.x;
-        destination.velocity.y=source.velocity.y;
-        destination.size.x=source.size.x;
-        destination.size.y=source.size.y;
-    }
 }
 class Room{
     idx:number;
@@ -548,7 +529,7 @@ class Room{
         const lastEnt = room.entities[room.maxEntities-1];
         if(lastEnt.roomId!= entity.roomId){//if it's already at the end, can skip the swap
             room.entities[idxToRemove] = lastEnt;//swap element
-            room.entities[room.maxEntities-1] = entity;
+            room.entities[room.maxEntities-1] = entity;//ensure the references are swapped, so that we don't end up with aliasing
             lastEnt.roomId = idxToRemove;
         }
         if(entity.kind==EntityKind.Player){room.players.delete(entity.roomId);}

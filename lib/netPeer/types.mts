@@ -22,8 +22,8 @@ class NetplayInput {
         return res;
     }
     serialize(): string {
-        return this.keysPressed+','+','+this.keysReleased+','+
-                (this.mousePosition?.x??-1)+','+(this.mousePosition?.x??-1);
+        return this.keysPressed+','+this.keysReleased+','+
+                (this.mousePosition?.x??-1)+','+(this.mousePosition?.y??-1);
     }
     deserialize(jsonStr: string): void {
         const [press,release,mousex,mousey] = jsonStr.split(',').map(x=>Number(x));
