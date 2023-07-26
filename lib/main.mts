@@ -45,7 +45,6 @@ class CollisionCells {
         for(const cells of CollisionCells.collisionCells){
             cells.clear();
         }
-
     }
     static init(){//init is called at the end of this file, it's not dependent on game state to work
         CollisionCells.collisionCells = [];
@@ -402,7 +401,7 @@ class Entity{
         Room.RemoveEntity(room,entity);
     }
     static updateEnemy(room:Room,entity:Entity){
-        //TODO: remove O(n^2) loop...
+        //collision check for bullets
         Collision.checkCollisions(room,entity,(collisionId:number)=>{
             const ent = room.entities[collisionId];
             if(ent.kind == EntityKind.Bullet){
@@ -420,7 +419,49 @@ class Entity{
             //TODO: cooldown==0, do attack
             entity.cooldown+=30;//TODO: add a random amount
         }
-        //TODO: collision check for bullets...
+        //update AI
+        let tgtX = entity.position.x;
+        let tgtY = entity.position.y;
+        for(const pid of room.players){
+            tgtX = room.entities[pid].position.x+Math.floor(entity.size.x/2);
+            tgtY = room.entities[pid].position.y;
+        }
+        //movement, if overlapping terrain, move slower
+        let moveSpeed = 1;
+        if (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, entity.size.x, entity.size.y)) {
+            moveSpeed = 0.2;
+        }
+        if(entity.euqipped == EuqippedKind.ENEMY_GRUNT){
+            //linear move towards
+            if(tgtX<entity.position.x){
+                entity.position.x-=moveSpeed;
+            }
+            if(tgtX>entity.position.x){
+                entity.position.x+=moveSpeed;
+            }
+            if(tgtY<entity.position.y){
+                entity.position.y-=moveSpeed;
+            }
+            if(tgtY>entity.position.y){
+                entity.position.y+=moveSpeed;
+            }
+        }
+        if(entity.euqipped == EuqippedKind.ENEMY_WINGED){
+            //linear move towards, but stay at current Y
+            
+            if(tgtX<entity.position.x){
+                entity.position.x-=moveSpeed;
+            }
+            if(tgtX>entity.position.x){
+                entity.position.x+=moveSpeed;
+            }
+            if(tgtY<entity.position.y){
+                entity.position.y-=moveSpeed;
+            }
+            if(tgtY>entity.position.y){
+                entity.position.y+=moveSpeed;
+            }
+        }
     }
 }
 class Room{
@@ -430,12 +471,12 @@ class Room{
     entities:Array<Entity>;
     maxEntities:number;
     terrain:Terrain;
-    playerCount:number;
+    players:Set<number>;//record which players are in the room for fast lookup
     static MAX_ENTIES = 500;
     constructor(){
         this.entities = new Array(Room.MAX_ENTIES);
         this.maxEntities = 0;
-        this.playerCount = 0;
+        this.players = new Set();
     }
     static MoveEntity(startRoom:Room,endRoom:Room,entity:Entity){
         //note: if moving in one direction, 
@@ -448,7 +489,7 @@ class Room{
         entity.roomId=room.maxEntities;
         room.entities[room.maxEntities] = entity;//TODO: instead of overwriting, could copy props
         room.maxEntities+=1;
-        if(entity.kind==EntityKind.Player){room.playerCount+=1;}
+        if(entity.kind==EntityKind.Player){room.players.add(entity.roomId);}
     }
     static RemoveEntity(room:Room,entity:Entity){
         //swap & pop, assumes iterating backwards
@@ -458,8 +499,8 @@ class Room{
         room.entities[entity.roomId] = lastEntity;//TODO: instead of overwriting, could copy props
         lastEntity.roomId = entity.roomId;
         room.maxEntities-=1;
+        if(entity.kind==EntityKind.Player){room.players.delete(entity.roomId);}
         entity.roomId=-1;
-        if(entity.kind==EntityKind.Player){room.playerCount-=1;}
     }
     static update(room:Room){
         for(let i=room.maxEntities-1;i>=0;i-=1){
@@ -521,6 +562,10 @@ class Terrain {
         }
     }
     static hitTest(terrain:Terrain,x:number,y:number,w:number,h:number) {
+        x=Math.floor(x);
+        y=Math.floor(y);
+        w=Math.floor(w);
+        h=Math.floor(h);
 		for (let x_ = 0; x_ < w; x_+=1) {
 			for (let y_ = 0; y_ < h; y_+=1) {
                 const pixel = Terrain.getBit(x + x_, y+ y_, terrain);
@@ -621,6 +666,9 @@ class Game{
         this.#inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
         this.#inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
         this.#inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
+        this.#inputReader.bindings.set('KeyD', CONTROLS.RIGHT);
+        this.#inputReader.bindings.set('KeyA', CONTROLS.LEFT);
+        this.#inputReader.bindings.set('KeyW', CONTROLS.JUMP);
         this.#inputReader.bindings.set('Space', CONTROLS.SHOOT);
         this.#inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
         
@@ -663,7 +711,7 @@ class Game{
         
         //--update loop below
         for(const room of gameInstance.rooms){
-            if(room.playerCount){
+            if(room.players.size>0){
                 Collision.preExecute();
                 Collision.populateCollisions(room);
                 Room.update(room);
