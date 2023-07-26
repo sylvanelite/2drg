@@ -510,7 +510,12 @@ class Room{
     static MoveEntity(startRoom:Room,endRoom:Room,entity:Entity){
         //note: if moving in one direction, 
         //can be processed multiple times per frame depending on how rooms are sweept in update() 
-        Room.RemoveEntity(startRoom,entity);
+        //to avoid aliasing bug, need to replace the 'remove' with a new instance, then remove that
+        //then can take the original entity and put it into another room
+        const entRemover = new Entity();
+        entRemover.roomId = entity.roomId;
+        startRoom.entities[entity.roomId] = entRemover;
+        Room.RemoveEntity(startRoom,entRemover);
         Room.AddEntity(endRoom,entity);
     }
     static AddEntity(room:Room,entity:Entity){
