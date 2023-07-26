@@ -64,7 +64,6 @@ class KeyboardAndMouseInputReader extends InputReader {
           false );
           canvas.addEventListener( "mouseup",
             (e) => {
-                console.log(e,this.bindings,"mouse_"+e.button)
                 if(!this.bindings.has("mouse_"+e.button)){return;}
                 const bind = this.bindings.get("mouse_"+e.button);
                 NetplayInput.clearPressed(this.keyboardInput,bind);

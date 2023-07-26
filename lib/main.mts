@@ -1,34 +1,3 @@
-/*class Velocity {
-	static system (instance:IgInstance, id:number){
-        //bresenham
-        //https://stackoverflow.com/questions/4672279/bresenham-algorithm-in-javascript
-        let x1 = Position.component.x[id];
-        let y1 = Position.component.y[id];
-        const x2 = x1+Velocity.component.x[id];
-        const y2 = y1+Velocity.component.y[id];
-        const dx = Math.abs(x2 - x1);
-        const dy = Math.abs(y2 - y1);
-        const sx = (x1 < x2) ? 1 : -1;
-        const sy = (y1 < y2) ? 1 : -1;
-        let err = dx - dy;
-        // Main loop
-        while (!((x1 == x2) && (y1 == y2))) {
-            var e2 = err << 1;
-            if (e2 > -dy) {
-                err -= dy;
-                x1 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y1 += sy;
-            }
-            //update coordinates
-            //TODO: if solid.... (if need to check terrain...)
-            Position.component.x[id] = x1;
-            Position.component.y[id] = y1;
-        }
-	}
-}*/
 
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
 import { NetplayInput } from "./netPeer/types.mjs";
@@ -57,13 +26,26 @@ enum EntityKind{
     Bullet = 100,
     Resource = 1000,
 }
+enum EuqippedKind{
+    WEAPON_FLAMETHROWER=1,
+    WEAPON_PIERCE=2,
+    WEAPON_MACHINEGUN=3,
+
+    ENEMY_GRUNT=10,
+    ENEMY_WINGED=11,
+
+    MINERAL_HP=100,
+    MINERAL_RESOURCE_1=101
+}
 class Entity{
     static uid=0;
     uid:number;//globally unique id, preserved across room boundaries
     roomId:number;//index location in the room array, changes with room operations: insert/delete/move
     kind:EntityKind;//how the entity is controlled
+    euqipped:EuqippedKind;//subtype, e.g. player class, bullet type, enemy type
     hp:number;
     maxHp:number;
+    cooldown:number;//TODO: other vars, ammo, etc
     sprite:number;
     spriteFrame:number;
     position:{x:number,y:number};
@@ -76,6 +58,7 @@ class Entity{
         this.kind = EntityKind.Enemy;
         this.hp=0;
         this.maxHp=100;
+        this.cooldown=0;
         this.sprite=0;
         this.spriteFrame=0;
         this.position={x:0,y:0};
@@ -85,15 +68,29 @@ class Entity{
     static update(room:Room,entity:Entity){
         //TODO:options for all ent.kind
         if(entity.kind == EntityKind.Player){
-            Entity.move_character(room,entity);
+            Entity.updateCharacter(room,entity);
+        }
+        if(entity.kind == EntityKind.Bullet){
+            Entity.updateBullet(room,entity);
         }
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         //TODO:ent.kind
-        ctx.fillStyle = "#FF0000";
+        if(entity.kind == EntityKind.Player){
+            ctx.fillStyle = "#FF0000";
+        }
+        if(entity.kind == EntityKind.Bullet){
+            ctx.fillStyle = "#000000";
+        }
+        if(entity.kind == EntityKind.Enemy){
+            ctx.fillStyle = "#0000FF";
+        }
+        if(entity.kind == EntityKind.Resource){
+            ctx.fillStyle = "#FF00FF";
+        }
         ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
     }
-    static move_character(room:Room,entity:Entity) {
+    static updateCharacter(room:Room,entity:Entity) {
         const controls =Game.inputs.get(entity.uid);
         let i = 0;
         for (i = 0; i < 3; i+=1) {    
@@ -169,11 +166,105 @@ class Entity{
             gameInstance.currentRoom = idx;
         }
         //==shooting (TODO: spawn bullet & bresenham)
-        if (controls.mousePosition&& NetplayInput.getReleased(controls,CONTROLS.SHOOT) ) {
-            const mousePos =controls.mousePosition;
-            Terrain.clearCircle(room.terrain,mousePos.x,mousePos.y,30);
+        if(entity.cooldown>0){//canshoot
+            entity.cooldown-=1;
+        }
+        if (controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
+            if(entity.cooldown==0){//canshoot
+                const mousePos =controls.mousePosition;
+                const bulletEntity = new Entity();//TODO: real init...
+                bulletEntity.kind = EntityKind.Bullet;
+                bulletEntity.euqipped = entity.euqipped;//bullet type match the weapon that shot it
+                bulletEntity.size.x = 2;
+                bulletEntity.size.y = 2;
+                bulletEntity.position.x = entity.position.x;
+                bulletEntity.position.y = entity.position.y;
+                const aimingAngleRads = Math.atan2(mousePos.y-entity.position.y,mousePos.x-entity.position.x) ;//* 180 / Math.PI to get deg
+                switch(entity.euqipped){
+                    case EuqippedKind.WEAPON_FLAMETHROWER:
+                        entity.cooldown = 1;//cooldown 
+                        bulletEntity.hp = 5;//damage
+                        bulletEntity.cooldown = 20;//bullet lifetime
+                        //TODO: spread...
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*5;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*5;//speed
+                        Room.AddEntity(room,bulletEntity);
+                        break;
+                    case EuqippedKind.WEAPON_MACHINEGUN:
+                        entity.cooldown = 5;//cooldown 
+                        bulletEntity.hp = 5;//damage
+                        bulletEntity.cooldown = 100;//bullet lifetime
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
+                        Room.AddEntity(room,bulletEntity);
+                        break;
+                    case EuqippedKind.WEAPON_PIERCE:
+                        entity.cooldown = 50;//cooldown 
+                        bulletEntity.hp = 50;//damage
+                        bulletEntity.cooldown = 100;//bullet lifetime
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
+                        Room.AddEntity(room,bulletEntity);
+                        break;
+                }
+                console.log(bulletEntity);
+            }
         }
 
+    }
+    
+    static updateBullet(room:Room,entity:Entity) {
+        //bresenham
+        //https://stackoverflow.com/questions/4672279/bresenham-algorithm-in-javascript
+        let x1 = entity.position.x;
+        let y1 = entity.position.y;
+        const x2 = x1+Math.ceil(entity.velocity.x);
+        const y2 = y1+Math.ceil(entity.velocity.y);
+        const dx = Math.abs(x2 - x1);
+        const dy = Math.abs(y2 - y1);
+        const sx = (x1 < x2) ? 1 : -1;
+        const sy = (y1 < y2) ? 1 : -1;
+        let err = dx - dy;
+        // Main loop
+        while (!((x1 == x2) && (y1 == y2))) {
+            var e2 = err << 1;
+            if (e2 > -dy) {
+                err -= dy;
+                x1 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y1 += sy;
+            }
+            //update coordinates
+            //TODO: if solid.... (if need to check terrain...)
+            entity.position.x = x1;
+            entity.position.y = y1;
+            if (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, entity.size.x, entity.size.y)) {
+                Entity.destroyBullet(room,entity);
+                break;
+            }
+        }
+        if(entity.position.x<0||entity.position.x>room.terrain.width||
+            entity.position.y<0||entity.position.y>room.terrain.height){
+            Room.RemoveEntity(room,entity);//if going out of bounds, remove without destroy (explode)
+        }
+        entity.cooldown-=1;
+        if(entity.cooldown<0){
+            Room.RemoveEntity(room,entity);//bullet timed out
+        }
+    }
+    static destroyBullet(room:Room,entity:Entity){
+        if(entity.euqipped == EuqippedKind.WEAPON_FLAMETHROWER){
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,30);
+        }
+        if(entity.euqipped == EuqippedKind.WEAPON_MACHINEGUN){
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,30);
+        }
+        if(entity.euqipped == EuqippedKind.WEAPON_PIERCE){
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,30);
+        }
+        Room.RemoveEntity(room,entity);
     }
 }
 class Room{
@@ -202,11 +293,13 @@ class Room{
     }
     static RemoveEntity(room:Room,entity:Entity){
         //swap & pop, assumes iterating backwards
+        if(entity.roomId<0){return;}//has already been destroyed
         if(room.maxEntities<=1){room.maxEntities=0;return;}//base case 1 or 0, nothing to remove
         const lastEntity = room.entities[room.maxEntities-1];//sawp current with last
         room.entities[entity.roomId] = lastEntity;//TODO: instead of overwriting, could copy props
         lastEntity.roomId = entity.roomId;
         room.maxEntities-=1;
+        entity.roomId=-1;
     }
     static update(room:Room){
         for(let i=room.maxEntities-1;i>=0;i-=1){
@@ -347,9 +440,9 @@ class Game{
         this.ctx = canvas.getContext("2d");
         this.#inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
-        this.worldWidth = 128;
+        this.worldWidth = 24;
         for(let i=0;i<this.worldWidth;i+=1){
-            for(let j=0;j<128;j+=1){
+            for(let j=0;j<24;j+=1){
                 const r = new Room();
                 r.idx = this.rooms.length;
                 const [x,y] = idxToXy(r.idx,this.worldWidth);
@@ -380,6 +473,7 @@ class Game{
         const playerEntity = new Entity();//TODO: real init...
         playerEntity.kind = EntityKind.Player;
         this.playerUid = playerEntity.uid;//TODO: get player number for actual local player
+        playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
         Room.AddEntity(startingRoom,playerEntity);
     }
     static updateLoop() {
