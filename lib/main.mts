@@ -207,7 +207,6 @@ class Entity{
                         Room.AddEntity(room,bulletEntity);
                         break;
                 }
-                console.log(bulletEntity);
             }
         }
 
