@@ -3,7 +3,6 @@ import { NetplayInput } from './netPeer/types.mjs';
 abstract class InputReader {
   bindings:Map<string,number> = new Map();//Local key bindings, keyboad->action name.
                                           //action name is an index into a bitmask for each key
-  inputMap:Map<number,NetplayInput> = new Map();//map from playerId to their input
   pressed(input:NetplayInput,key:number):boolean{ return NetplayInput.getPressed(input,key); }
   released(input:NetplayInput,key:number):boolean{ return NetplayInput.getReleased(input,key); }
   abstract getInput(): NetplayInput;

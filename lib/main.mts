@@ -1,6 +1,6 @@
 
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
-import { NetplayInput } from "./netPeer/types.mjs";
+import { NetplayInput, NetplayState } from "./netPeer/types.mjs";
 
 
 
@@ -277,28 +277,28 @@ class Entity{
             const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=room.terrain.width-entity.size.x-buffer;
-            gameInstance.currentRoom = idx;
+            if(entity.uid==gameInstance.playerUid){ gameInstance.currentRoom = idx; }
         }
         if(entity.position.x+entity.size.x > room.terrain.width&& room.x<gameInstance.worldWidth-1){
             const idx = xyToIdx(room.x+1,room.y,gameInstance.worldWidth);
             const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=buffer;
-            gameInstance.currentRoom = idx;
+            if(entity.uid==gameInstance.playerUid){ gameInstance.currentRoom = idx; }
         }
         if(entity.position.y<0 && room.y>0){
             const idx = xyToIdx(room.x,room.y-1,gameInstance.worldWidth);
             const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y=room.terrain.height-entity.size.y-buffer;
-            gameInstance.currentRoom = idx;
+            if(entity.uid==gameInstance.playerUid){ gameInstance.currentRoom = idx; }
         }
         if(entity.position.y+entity.size.y > room.terrain.height&& room.y<gameInstance.worldWidth-1){
             const idx = xyToIdx(room.x,room.y+1,gameInstance.worldWidth);
             const targetRoom = gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y =buffer;
-            gameInstance.currentRoom = idx;
+            if(entity.uid==gameInstance.playerUid){ gameInstance.currentRoom = idx; }
         }
         //==shooting (TODO: spawn bullet & bresenham)
         if(entity.cooldown>0){//canshoot
@@ -514,13 +514,14 @@ class Room{
             const ent = room.entities[i];
             Entity.draw(ctx,ent);
         }
-        
-        const controls =Game.inputs.get(gameInstance.playerUid);
-        if(controls.mousePosition){
-            ctx.strokeStyle = '1px solid black';
-            ctx.beginPath();
-            ctx.arc(controls.mousePosition.x,controls.mousePosition.y,10,0,Math.PI*2);
-            ctx.stroke();
+        if(Game.inputs){
+            const controls =Game.inputs.get(gameInstance.playerUid);
+            if(controls.mousePosition){
+                ctx.strokeStyle = '1px solid black';
+                ctx.beginPath();
+                ctx.arc(controls.mousePosition.x,controls.mousePosition.y,10,0,Math.PI*2);
+                ctx.stroke();
+            }
         }
     }
 
@@ -633,17 +634,41 @@ const idxToXy = (idx:number,width:number)=>{
         Math.floor(idx/width)//y
     ];
 }
-class Game{
-    #inputReader:KeyboardAndMouseInputReader;
+class Game extends NetplayState{
+
+    serialize(): any { 
+        const rooms = [];
+        for(const r of this.rooms){
+            //if(r.players.size>0){//TODO: serialise only if needed? 
+            
+            //}
+        }
+        return {
+            currentRoom:this.currentRoom,
+
+            //these shouldn't change after init(), so don't need to be serialised
+            //playerUid:this.playerUid,
+            //worldWidth:this.worldWidth,
+            //tickRate:this.tickRate
+        };
+    }
+    deserialize(value: any) { 
+    }
+
+
+
+    inputReader:KeyboardAndMouseInputReader;
     ctx:CanvasRenderingContext2D;
     rooms:Array<Room>;
     currentRoom:number;//room for the local player
     worldWidth:number;
     playerUid:number;
-    static inputs = new Map<number,NetplayInput>();
+    tickRate:number;//time until the next update() is called
     constructor(canvas:HTMLCanvasElement) {
+        super();
+        this.tickRate = 30/1000;
         this.ctx = canvas.getContext("2d");
-        this.#inputReader = new KeyboardAndMouseInputReader(canvas);
+        this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldWidth = 24;
         for(let i=0;i<this.worldWidth;i+=1){
@@ -659,30 +684,31 @@ class Game{
             }
         }
     }
-    init(){
-        this.init_objects(); //init the objects
-        
+    init(playerId:number,playerCount:number){
         //note:bindings is a bitmask, should cap at ~32 
-        this.#inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
-        this.#inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
-        this.#inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
-        this.#inputReader.bindings.set('KeyD', CONTROLS.RIGHT);
-        this.#inputReader.bindings.set('KeyA', CONTROLS.LEFT);
-        this.#inputReader.bindings.set('KeyW', CONTROLS.JUMP);
-        this.#inputReader.bindings.set('Space', CONTROLS.SHOOT);
-        this.#inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
+        this.inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
+        this.inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
+        this.inputReader.bindings.set('KeyD', CONTROLS.RIGHT);
+        this.inputReader.bindings.set('KeyA', CONTROLS.LEFT);
+        this.inputReader.bindings.set('KeyW', CONTROLS.JUMP);
+        this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
+        //set up objects
         
-        Game.updateLoop();
-        Game.renderLoop();
-    }
-    init_objects() {
         this.currentRoom = 500;
         const startingRoom  = this.rooms[this.currentRoom];
-        const playerEntity = new Entity();//TODO: real init...
-        playerEntity.kind = EntityKind.Player;
-        this.playerUid = playerEntity.uid;//TODO: get player number for actual local player
-        playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
-        Room.AddEntity(startingRoom,playerEntity);
+        for(let i=0;i<playerCount;i+=1){
+            const playerEntity = new Entity();//TODO: real init...
+            playerEntity.kind = EntityKind.Player;
+            if(playerEntity.uid == playerId){
+                //note: 'if' is not really needed. Assumes that players are the 1st entity 
+                //since playerId will be 0,1,2,3,4...
+                this.playerUid = playerEntity.uid;
+            }
+            playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
+            Room.AddEntity(startingRoom,playerEntity);
+        }
         //enemies
         for(const r of this.rooms){
             const eCount = 1+Math.floor(Math.random()*3);
@@ -700,15 +726,10 @@ class Game{
                 Room.AddEntity(r,enemy);
             }
         }
-
     }
-    static updateLoop() {
-        //TODO: feed in input via rollback...
-        gameInstance.#inputReader.getInput();
-        const inputs = gameInstance.#inputReader.getInput();
-        Game.inputs.clear();
-        Game.inputs.set(gameInstance.playerUid,inputs);//Player id:0
-        
+    static inputs: Map<number, NetplayInput>;
+    tick(playerInputs: Map<number, NetplayInput>): void {
+        Game.inputs= playerInputs;
         //--update loop below
         for(const room of gameInstance.rooms){
             if(room.players.size>0){
@@ -717,24 +738,21 @@ class Game{
                 Room.update(room);
             }
         }
-        setTimeout(function () {
-            Game.updateLoop();
-        }, 1000 / 30); //the loop
     }
-    static renderLoop() {
-        gameInstance.ctx.clearRect(0, 0, gameInstance.ctx.canvas.width, gameInstance.ctx.canvas.height);
-        const currentRoom = gameInstance.rooms[gameInstance.currentRoom];
-        Room.draw(gameInstance.ctx,currentRoom);
-        window.requestAnimationFrame(Game.renderLoop);
+    draw() {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+        const currentRoom = this.rooms[this.currentRoom];
+        Room.draw(this.ctx,currentRoom);
     }
 }
 let gameInstance:Game =null;
 class Main {
-	static init (){	
+	static init (playerId:number,playerCount:number){	
 		const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 		gameInstance = new Game(canvas);
-        gameInstance.init();
+        gameInstance.init(playerId,playerCount);
         console.log(gameInstance);
+        return gameInstance;
 	}
 }
 export {Main};

@@ -7,8 +7,12 @@
 		canvas{display:block}
 	</style>
 	<script type="module">
-		import {Main} from "./build/main.mjs";
-		window.onload = Main.init;
+		import {RbMain} from "./build/rbMain.mjs";
+		const main = new RbMain();
+		window.host=()=>{RbMain.host(main);};
+		window.join=(id)=>{RbMain.join(main,id);};
+		window.begin=()=>{RbMain.begin(main);};
+		window.readyUp=()=>{RbMain.readyUp(main);};
 	</script>
 </head>
 <body>
