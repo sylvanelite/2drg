@@ -2,6 +2,36 @@
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
 import { NetplayInput, NetplayState } from "./netPeer/types.mjs";
 
+//https://burtleburtle.net/bob/rand/smallprng.html (I wrote this PRNG. I place it in the public domain. )
+//https://github.com/bryc/code/blob/master/jshash/PRNGs.md (License: Public domain. )
+//https://gist.github.com/imneme/85cff47d4bad8de6bdeb671f9c76c814 - The MIT License (MIT)
+//JSF / smallprng
+// 3-rotate version, improves randomness.
+
+class PRNG{
+	static RNG_A=42;//TODO: remove from beind global
+	static RNG_B=1234;
+	static RNG_C=5678;
+	static RNG_D=9001;
+
+	static prng(seed:number=null){
+		if(seed){
+			PRNG.RNG_A=seed;
+			PRNG.RNG_B=seed*10;
+			PRNG.RNG_C=seed*100;
+			PRNG.RNG_D=seed*1000;
+		}
+		PRNG.RNG_A |= 0; PRNG.RNG_B |= 0; PRNG.RNG_C |= 0; PRNG.RNG_D |= 0;
+		const t = PRNG.RNG_A - (PRNG.RNG_B << 23 | PRNG.RNG_B >>> 9) | 0;
+		PRNG.RNG_A = PRNG.RNG_B ^ (PRNG.RNG_C << 16 | PRNG.RNG_C >>> 16) | 0;
+		PRNG.RNG_B = PRNG.RNG_C + (PRNG.RNG_D << 11 | PRNG.RNG_D >>> 21) | 0;
+		PRNG.RNG_B = PRNG.RNG_C + PRNG.RNG_D | 0;
+		PRNG.RNG_C = PRNG.RNG_D + t | 0;
+		PRNG.RNG_D = PRNG.RNG_A + t | 0;
+		
+		return (PRNG.RNG_D >>> 0) / 4294967296;//remove divide to make an int instead of float?
+	}
+}
 
 
 //https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
@@ -127,7 +157,6 @@ class Collision {
 }
 
 CollisionCells.init();
-export {Collision}
 /*
 TODO:
 mobs, peer, rollback, bullets,
@@ -463,6 +492,25 @@ class Entity{
             }
         }
     }
+    static apply(source:Entity,destination:Entity){
+        //copies one entitie's values into another
+        destination.roomId = source.roomId;
+        destination.uid=source.uid;
+        destination.roomId=source.roomId;
+        destination.kind=source.kind;
+        destination.euqipped=source.euqipped;
+        destination.hp=source.hp;
+        destination.maxHp=source.maxHp;
+        destination.cooldown=source.cooldown;
+        destination.sprite=source.sprite;
+        destination.spriteFrame=source.spriteFrame;
+        destination.position.x=source.position.x;
+        destination.position.y=source.position.y;
+        destination.velocity.x=source.velocity.x;
+        destination.velocity.y=source.velocity.y;
+        destination.size.x=source.size.x;
+        destination.size.y=source.size.y;
+    }
 }
 class Room{
     idx:number;
@@ -474,7 +522,7 @@ class Room{
     players:Set<number>;//record which players are in the room for fast lookup
     static MAX_ENTIES = 500;
     constructor(){
-        this.entities = new Array(Room.MAX_ENTIES);
+        this.entities = [];
         this.maxEntities = 0;
         this.players = new Set();
     }
@@ -485,22 +533,28 @@ class Room{
         Room.AddEntity(endRoom,entity);
     }
     static AddEntity(room:Room,entity:Entity){
-        if(room.maxEntities>=Room.MAX_ENTIES){console.warn('max entities');return;}
-        entity.roomId=room.maxEntities;
-        room.entities[room.maxEntities] = entity;//TODO: instead of overwriting, could copy props
+        if(room.maxEntities==room.entities.length){
+            room.entities.push(entity);
+        }else{
+            room.entities[room.maxEntities] = entity;// Entity.apply(entity,room.entities[room.maxEntities]);
+        }
+        entity.roomId = room.maxEntities;
         room.maxEntities+=1;
         if(entity.kind==EntityKind.Player){room.players.add(entity.roomId);}
     }
     static RemoveEntity(room:Room,entity:Entity){
-        //swap & pop, assumes iterating backwards
-        if(entity.roomId<0){return;}//has already been destroyed
-        if(room.maxEntities<=1){room.maxEntities=0;return;}//base case 1 or 0, nothing to remove
-        const lastEntity = room.entities[room.maxEntities-1];//sawp current with last
-        room.entities[entity.roomId] = lastEntity;//TODO: instead of overwriting, could copy props
-        lastEntity.roomId = entity.roomId;
-        room.maxEntities-=1;
+        const idxToRemove = entity.roomId;
+        const lastEnt = room.entities[room.maxEntities-1];
+        if(lastEnt.roomId!= entity.roomId){//if it's already at the end, can skip the swap
+            room.entities[idxToRemove] = lastEnt;//swap element
+            room.entities[room.maxEntities-1] = entity;
+            lastEnt.roomId = idxToRemove;
+        }
         if(entity.kind==EntityKind.Player){room.players.delete(entity.roomId);}
-        entity.roomId=-1;
+        entity.roomId = -1;
+        if(room.maxEntities>0){
+            room.maxEntities-=1;
+        }
     }
     static update(room:Room){
         for(let i=room.maxEntities-1;i>=0;i-=1){
@@ -635,17 +689,51 @@ const idxToXy = (idx:number,width:number)=>{
     ];
 }
 class Game extends NetplayState{
-
+//TODO: serialise rooms->entities->terrain
     serialize(): any { 
         const rooms = [];
         for(const r of this.rooms){
+            const ents = [];
+            for(let i=0;i<r.maxEntities;i+=1){
+                const e = r.entities[i];
+                if(e.roomId<0){console.warn("neg ID alive!",r)};
+                if(i!=e.roomId){console.warn("AAAAAAAAAAAAAA",e,i)}
+                ents.push({
+                    uid:e.uid,
+                    roomId:e.roomId,
+                    kind:e.kind,
+                    euqipped:e.euqipped,
+                    hp:e.hp,
+                    maxHp:e.maxHp,
+                    cooldown:e.cooldown,
+                    sprite:e.sprite,
+                    spriteFrame:e.spriteFrame,
+                    position_x:e.position.x,
+                    position_y:e.position.y,
+                    velocity_x:e.velocity.x,
+                    velocity_y:e.velocity.y,
+                    size_x:e.size.x,
+                    size_y:e.size.y
+                });
+            }
+            const rSerial = {
+                idx:r.idx,
+                x:r.x,
+                y:r.y,
+                players:Array.from(r.players),
+                maxEntities:r.maxEntities,
+                ents
+                //TODO: terrain
+                //TODO: entities...
+            };
             //if(r.players.size>0){//TODO: serialise only if needed? 
-            
+            rooms.push(rSerial);
             //}
         }
         return {
             currentRoom:this.currentRoom,
-
+            EnityUid:Entity.uid,
+            rooms
             //these shouldn't change after init(), so don't need to be serialised
             //playerUid:this.playerUid,
             //worldWidth:this.worldWidth,
@@ -653,6 +741,37 @@ class Game extends NetplayState{
         };
     }
     deserialize(value: any) { 
+        console.log(value);
+        Entity.uid = value.EnityUid;
+        this.currentRoom = value.currentRoom;
+        for(const r of value.rooms){
+            const tgt = this.rooms[r.idx];
+            tgt.x = r.x;
+            tgt.y = r.y;
+            tgt.players = new Set(r.players);
+            tgt.maxEntities = r.maxEntities;
+            let entId = 0;
+            for(const e of r.ents){
+                const ent = tgt.entities[entId];
+                ent.roomId = e.roomId;//note: e.roomId could be negative if it's deleted?
+                ent.uid=e.uid;
+                ent.roomId=e.roomId;
+                ent.kind=e.kind;
+                ent.euqipped=e.euqipped;
+                ent.hp=e.hp;
+                ent.maxHp=e.maxHp;
+                ent.cooldown=e.cooldown;
+                ent.sprite=e.sprite;
+                ent.spriteFrame=e.spriteFrame;
+                ent.position.x=e.position_x;
+                ent.position.y=e.position_y;
+                ent.velocity.x=e.velocity_x;
+                ent.velocity.y=e.velocity_y;
+                ent.size.x=e.size_x;
+                ent.size.y=e.size_y;
+                entId+=1;
+            }
+        }
     }
 
 
@@ -711,18 +830,18 @@ class Game extends NetplayState{
         }
         //enemies
         for(const r of this.rooms){
-            const eCount = 1+Math.floor(Math.random()*3);
+            const eCount = 1+Math.floor(PRNG.prng()*3);
             for(let i=0;i<eCount;i+=1){
                 const enemy = new Entity();//TODO: real init...
                 enemy.kind = EntityKind.Enemy;
                 enemy.euqipped = EuqippedKind.ENEMY_GRUNT;
                 enemy.hp=100;
                 enemy.maxHp=100;
-                if(Math.random()>0.5){
+                if(PRNG.prng()>0.5){
                     enemy.euqipped = EuqippedKind.ENEMY_WINGED;
                 }
-                enemy.position.x=Math.floor(Math.random()*r.terrain.width);
-                enemy.position.y=Math.floor(Math.random()*r.terrain.height);
+                enemy.position.x=Math.floor(PRNG.prng()*r.terrain.width);
+                enemy.position.y=Math.floor(PRNG.prng()*r.terrain.height);
                 Room.AddEntity(r,enemy);
             }
         }
