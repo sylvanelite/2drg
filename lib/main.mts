@@ -544,6 +544,7 @@ class Room{
     }
     static RemoveEntity(room:Room,entity:Entity){
         const idxToRemove = entity.roomId;
+        if(idxToRemove==-1){return;}//entity was already destroyed earlier
         const lastEnt = room.entities[room.maxEntities-1];
         if(lastEnt.roomId!= entity.roomId){//if it's already at the end, can skip the swap
             room.entities[idxToRemove] = lastEnt;//swap element
@@ -697,7 +698,6 @@ class Game extends NetplayState{
             for(let i=0;i<r.maxEntities;i+=1){
                 const e = r.entities[i];
                 if(e.roomId<0){console.warn("neg ID alive!",r)};
-                if(i!=e.roomId){console.warn("AAAAAAAAAAAAAA",e,i)}
                 ents.push({
                     uid:e.uid,
                     roomId:e.roomId,
@@ -741,7 +741,6 @@ class Game extends NetplayState{
         };
     }
     deserialize(value: any) { 
-        console.log(value);
         Entity.uid = value.EnityUid;
         this.currentRoom = value.currentRoom;
         for(const r of value.rooms){
