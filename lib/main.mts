@@ -2,6 +2,133 @@
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
 import { NetplayInput } from "./netPeer/types.mjs";
 
+
+
+//https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
+const hash = function (x:number) {
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    return x;
+};
+
+//collision detection algorithm:
+//hold a bunch of buckets. For each element, hash their X,Y with an avalance function to get a bucket
+//insert that element ID into its bucket, scanning through to see if there's anything else in it
+//each frame, the buckets need to be cleared.
+//to do this, let the buckets grow indefinitely (capped by max elemes in scene), but reset by just updating an 'end' pointer
+//this gives O(1) clearing, and means allocation/memory pressure is reduced
+//the number of bins needed depends on number of elements in scene and the quality of the hash function
+class CacheArray{
+    #backingArray:Array<number> = [];
+    #length:number = 0;
+    clear(){ this.#length = 0; }
+    push(elem:number){
+        if(this.#backingArray.length==this.#length){
+            this.#backingArray.push(elem);//no more space, grow
+        }else{
+            this.#backingArray[this.#length] = elem;//space exists, insert
+        }
+        this.#length+=1;
+    }
+    get length(){return this.#length; }
+    get(idx:number){return this.#backingArray[idx];}
+}
+//pre-bake collision cells
+class CollisionCells {
+    static get hashLength(){
+        return 512;
+    }
+    //map of collision type->collision
+    static collisionCells:Array<CacheArray> = null;
+    static clear(){
+        for(const cells of CollisionCells.collisionCells){
+            cells.clear();
+        }
+
+    }
+    static init(){//init is called at the end of this file, it's not dependent on game state to work
+        CollisionCells.collisionCells = [];
+        for(let i=0;i<CollisionCells.hashLength;i+=1){
+            CollisionCells.collisionCells.push(new CacheArray());
+        }
+    }
+}
+CollisionCells.init();
+
+//collision class is for entity-entity collisions
+class Collision {
+    static cellSize = 32;
+    static preExecute(){
+        CollisionCells.clear();
+	}
+	static populateCollisions(room:Room){
+		// Insert all entities into a spatial hash and check them against any
+		// other entity that already resides in the same cell. Entities that are
+		// bigger than a single cell, are inserted into each one they intersect
+		// with.
+
+		// A list of entities, which the current one was already checked with,
+		// is maintained for each entity.
+		
+		// Skip entities that don't check, don't get checked and don't collide
+        for(let i=room.maxEntities-1;i>=0;i-=1){
+            const ent = room.entities[i];   
+            const xmin = Math.floor(ent.position.x / Collision.cellSize);
+            const ymin = Math.floor(ent.position.y / Collision.cellSize);
+            const xmax = Math.floor((ent.position.x + ent.size.x) / Collision.cellSize) + 1;
+            const ymax = Math.floor((ent.position.y + ent.size.y) / Collision.cellSize) + 1;
+            for (let x = xmin; x < xmax; x++) {
+                for (let y = ymin; y < ymax; y++) {
+                    const key = ((hash(x)%CollisionCells.hashLength)+hash(y))%CollisionCells.hashLength;
+                    const hashCell =CollisionCells.collisionCells[key];
+                    hashCell.push(ent.roomId);
+                } // end for y size
+            } // end for x size
+        }
+	}
+    static touches(entity:Entity, other:Entity) {
+        return !(
+            entity.position.x >=other.position.x + other.size.x ||
+            entity.position.x + entity.size.x <= other.position.x ||
+            entity.position.y >= other.position.y + other.size.y ||
+            entity.position.y + entity.size.y <= other.size.y
+        )
+    }
+	static checkCollisions(room:Room,entity:Entity,collideCallback:Function){
+        //use a set to prevent duplicates across cell bounds
+        //e.g. if A and B are overlapping 2 cells then collision will trigger for each cell
+        //     set stores results before triggering to ensure results are unique
+        const collisionResults = new Set<number>();
+
+        const xmin = Math.floor(entity.position.x / Collision.cellSize);
+        const ymin = Math.floor(entity.position.y / Collision.cellSize);
+        const xmax = Math.floor((entity.position.x + entity.size.x) / Collision.cellSize) + 1;
+        const ymax = Math.floor((entity.position.y + entity.size.y) / Collision.cellSize) + 1;
+        for (let x = xmin; x < xmax; x++) {
+            for (let y = ymin; y < ymax; y++) {
+                const key = ((hash(x)%CollisionCells.hashLength)+hash(y))%CollisionCells.hashLength;
+                const hashCell = CollisionCells.collisionCells[key];
+                    for (let i=0;i<hashCell.length;i+=1) {
+                        const otherId = hashCell.get(i);
+                        if(entity.roomId==otherId){continue;}
+                        const other = room.entities[otherId];
+                        // Intersection test needed and trigger callback if found
+                        if (Collision.touches(entity, other) ) {
+                            collisionResults.add(otherId);
+                        }
+                    }
+                }
+            }
+        for(const collision of collisionResults){
+            collideCallback(collision);
+        }
+	}
+	
+}
+
+CollisionCells.init();
+export {Collision}
 /*
 TODO:
 mobs, peer, rollback, bullets,
@@ -73,6 +200,9 @@ class Entity{
         if(entity.kind == EntityKind.Bullet){
             Entity.updateBullet(room,entity);
         }
+        if(entity.kind == EntityKind.Enemy){
+            Entity.updateEnemy(room,entity);
+        }
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         //TODO:ent.kind
@@ -81,9 +211,15 @@ class Entity{
         }
         if(entity.kind == EntityKind.Bullet){
             ctx.fillStyle = "#000000";
+            if(entity.euqipped==EuqippedKind.WEAPON_FLAMETHROWER){
+                ctx.fillStyle = "#FFA366";
+            }
         }
         if(entity.kind == EntityKind.Enemy){
             ctx.fillStyle = "#0000FF";
+            if(entity.euqipped == EuqippedKind.ENEMY_WINGED){
+                ctx.fillStyle = "#54D7FF";
+            }
         }
         if(entity.kind == EntityKind.Resource){
             ctx.fillStyle = "#FF00FF";
@@ -183,7 +319,7 @@ class Entity{
                 switch(entity.euqipped){
                     case EuqippedKind.WEAPON_FLAMETHROWER:
                         entity.cooldown = 1;//cooldown 
-                        bulletEntity.hp = 5;//damage
+                        bulletEntity.hp = 1;//damage
                         bulletEntity.cooldown = 20;//bullet lifetime
                         //TODO: spread...
                         bulletEntity.velocity.x = Math.cos(aimingAngleRads)*5;//speed
@@ -265,6 +401,27 @@ class Entity{
         }
         Room.RemoveEntity(room,entity);
     }
+    static updateEnemy(room:Room,entity:Entity){
+        //TODO: remove O(n^2) loop...
+        Collision.checkCollisions(room,entity,(collisionId:number)=>{
+            const ent = room.entities[collisionId];
+            if(ent.kind == EntityKind.Bullet){
+                //bullet collide
+                entity.hp-=ent.hp;
+                if(ent.euqipped == EuqippedKind.WEAPON_MACHINEGUN){
+                    Room.RemoveEntity(room,ent);//for type=machinegun, destroy bullet on collide
+                }
+            }
+        });
+        if(entity.hp<1){
+            Room.RemoveEntity(room,entity);
+        }
+        if(entity.cooldown==0){
+            //TODO: cooldown==0, do attack
+            entity.cooldown+=30;//TODO: add a random amount
+        }
+        //TODO: collision check for bullets...
+    }
 }
 class Room{
     idx:number;
@@ -273,10 +430,12 @@ class Room{
     entities:Array<Entity>;
     maxEntities:number;
     terrain:Terrain;
+    playerCount:number;
     static MAX_ENTIES = 500;
     constructor(){
         this.entities = new Array(Room.MAX_ENTIES);
         this.maxEntities = 0;
+        this.playerCount = 0;
     }
     static MoveEntity(startRoom:Room,endRoom:Room,entity:Entity){
         //note: if moving in one direction, 
@@ -289,6 +448,7 @@ class Room{
         entity.roomId=room.maxEntities;
         room.entities[room.maxEntities] = entity;//TODO: instead of overwriting, could copy props
         room.maxEntities+=1;
+        if(entity.kind==EntityKind.Player){room.playerCount+=1;}
     }
     static RemoveEntity(room:Room,entity:Entity){
         //swap & pop, assumes iterating backwards
@@ -299,6 +459,7 @@ class Room{
         lastEntity.roomId = entity.roomId;
         room.maxEntities-=1;
         entity.roomId=-1;
+        if(entity.kind==EntityKind.Player){room.playerCount-=1;}
     }
     static update(room:Room){
         for(let i=room.maxEntities-1;i>=0;i-=1){
@@ -474,6 +635,24 @@ class Game{
         this.playerUid = playerEntity.uid;//TODO: get player number for actual local player
         playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
         Room.AddEntity(startingRoom,playerEntity);
+        //enemies
+        for(const r of this.rooms){
+            const eCount = 1+Math.floor(Math.random()*3);
+            for(let i=0;i<eCount;i+=1){
+                const enemy = new Entity();//TODO: real init...
+                enemy.kind = EntityKind.Enemy;
+                enemy.euqipped = EuqippedKind.ENEMY_GRUNT;
+                enemy.hp=100;
+                enemy.maxHp=100;
+                if(Math.random()>0.5){
+                    enemy.euqipped = EuqippedKind.ENEMY_WINGED;
+                }
+                enemy.position.x=Math.floor(Math.random()*r.terrain.width);
+                enemy.position.y=Math.floor(Math.random()*r.terrain.height);
+                Room.AddEntity(r,enemy);
+            }
+        }
+
     }
     static updateLoop() {
         //TODO: feed in input via rollback...
@@ -484,7 +663,11 @@ class Game{
         
         //--update loop below
         for(const room of gameInstance.rooms){
-            Room.update(room);
+            if(room.playerCount){
+                Collision.preExecute();
+                Collision.populateCollisions(room);
+                Room.update(room);
+            }
         }
         setTimeout(function () {
             Game.updateLoop();
