@@ -1,4 +1,4 @@
-import { NetplayInput } from './netPeer/types.mjs';
+import { NetplayInput } from './netPeer/netplayInput.mjs';
 
 abstract class InputReader {
   bindings:Map<string,number> = new Map();//Local key bindings, keyboad->action name.

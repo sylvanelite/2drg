@@ -1,5 +1,5 @@
 //https://github.com/rameshvarun/netplayjs (ISC)
-import { NetplayInput, NetplayState } from "./types.mjs";
+import { NetplayInput, NetplayState } from "./netplayInput.mjs";
 import { CBuffer } from "./cbuffer.mjs";
 
 type NetplayPlayer = number;//player is a handle (id), use a type here so that it doesn't get confused with other ints
