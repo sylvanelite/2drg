@@ -1,6 +1,9 @@
 import { xyToIdx,Bit } from "./types.mjs";
 import { ImageCache } from "./ImageCache.mjs";
 
+const TERRAIN_WIDTH = 256;
+const TERRAIN_HEIGHT = 150;
+
 class Terrain {
     terrain:Uint8Array;
     width:number;
@@ -8,8 +11,8 @@ class Terrain {
     #isRendered:boolean;
     #imageData:HTMLCanvasElement;
     constructor(){
-        this.width = 300;
-        this.height = 150;
+        this.width = TERRAIN_WIDTH;
+        this.height = TERRAIN_HEIGHT;
         this.terrain = new Uint8Array(Math.floor(this.width*this.height )/ 8);
         this.#isRendered = false;
     }
@@ -77,9 +80,9 @@ class Terrain {
             return;
         }
         //otherwise, regenerate in an offscreen canvas
-        const offscreenCanvas = new OffscreenCanvas(300,150);
+        const offscreenCanvas = new OffscreenCanvas(TERRAIN_WIDTH,TERRAIN_HEIGHT);
         const offscreenContext = offscreenCanvas.getContext('2d');
-        const imageData =  offscreenContext.createImageData(300, 150);
+        const imageData =  offscreenContext.createImageData(TERRAIN_WIDTH, TERRAIN_HEIGHT);
         for (let x = 0; x < imageData.width; x+=1) {
             for (let y = 0; y < imageData.height; y+=1) {
                 // Index of the pixel in the array

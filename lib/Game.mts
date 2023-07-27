@@ -113,7 +113,7 @@ class Game extends NetplayState{
                 r.x = x;
                 r.y = y;
                 r.terrain = new Terrain();
-                Terrain.fillRect(r.terrain,0,50,300,100);
+                Terrain.fillRect(r.terrain,0,50,r.terrain.width,100);
                 this.rooms.push(r);
             }
         }
@@ -175,6 +175,8 @@ class Game extends NetplayState{
     }
     draw() {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+        this.ctx.fillStyle = "#000000";
+        this.ctx.fillRect(0,0,this.ctx.canvas.width, this.ctx.canvas.height);
         const currentRoom = this.rooms[this.currentRoom];
         Room.draw(this.ctx,currentRoom);
     }
