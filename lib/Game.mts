@@ -2,10 +2,9 @@
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
 import { NetplayInput, NetplayState } from "./netPeer/netplayInput.mjs";
 import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind } from "./types.mjs";
-import { Entity } from "./Entity.mjs";
+import { Entity,Collision } from "./Entity.mjs";
 import { Room } from "./Room.mjs";
 import { Terrain } from "./Terrain.mjs";
-import { Collision } from "./Collision.mjs";
 
 class Game extends NetplayState{
     static gameInstance:Game;

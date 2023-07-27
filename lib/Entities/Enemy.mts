@@ -1,9 +1,8 @@
 
-import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind } from "./types.mjs";
-import { Entity } from "./Entity.mjs";
-import { Room } from "./Room.mjs";
-import { Terrain } from "./Terrain.mjs";
-import { Collision } from "./Collision.mjs";
+import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind } from "../types.mjs";
+import { Entity,Collision } from "../Entity.mjs";
+import { Room } from "../Room.mjs";
+import { Terrain } from "../Terrain.mjs";
 class Enemy{
     
 static updateEnemy(room:Room,entity:Entity){
