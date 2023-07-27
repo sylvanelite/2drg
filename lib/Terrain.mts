@@ -1,11 +1,12 @@
 import { xyToIdx,Bit } from "./types.mjs";
+import { ImageCache } from "./ImageCache.mjs";
 
 class Terrain {
     terrain:Uint8Array;
     width:number;
     height:number;
     #isRendered:boolean;
-    #imageData:ImageData;
+    #imageData:HTMLCanvasElement;
     constructor(){
         this.width = 300;
         this.height = 150;
@@ -68,13 +69,17 @@ class Terrain {
         }
     }
     static draw(ctx:CanvasRenderingContext2D,terrain:Terrain){
-        //if there's a cached copy of the image to render, use that
+        if(terrain.#imageData){//always draw the previous image to prevent flicker on re-draw
+            ctx.drawImage(terrain.#imageData,0,0);
+        }
+        //the image is fully cached, don't regenerate pixel data
         if(terrain.#isRendered){
-            ctx.putImageData(terrain.#imageData,0,0);
             return;
         }
-        //otherwise, regenerate
-        const imageData =  ctx.createImageData(300, 150);
+        //otherwise, regenerate in an offscreen canvas
+        const offscreenCanvas = new OffscreenCanvas(300,150);
+        const offscreenContext = offscreenCanvas.getContext('2d');
+        const imageData =  offscreenContext.createImageData(300, 150);
         for (let x = 0; x < imageData.width; x+=1) {
             for (let y = 0; y < imageData.height; y+=1) {
                 // Index of the pixel in the array
@@ -86,8 +91,13 @@ class Terrain {
                 imageData.data[idx + 3] = isFilled?255:0;//TODO can always be 255 if background
             }
         }
-        ctx.putImageData(imageData,0,0);
-        terrain.#imageData = imageData;
+        offscreenContext.putImageData(imageData,0,0);
+        const image = ImageCache.getImage("./media/terrain_1.png");
+        if (!image.loaded){return;}//don't set isRendered=true until image has loaded
+        offscreenContext.globalCompositeOperation = "source-in";
+        offscreenContext.drawImage(image.data,0,0);
+        terrain.#imageData = offscreenCanvas as any as HTMLCanvasElement;//casting needed to convert offscreen to htmlElement
+         //imageData;
         terrain.#isRendered = true;
     }
 }
