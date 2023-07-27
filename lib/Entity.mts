@@ -34,38 +34,26 @@ class Entity{
         this.size={x:10,y:20};
     }
     static update(room:Room,entity:Entity){
-        //TODO:options for all ent.kind
         if(entity.kind == EntityKind.Player){
-            Player.updatePlayer(room,entity);
+            Player.update(room,entity);
         }
         if(entity.kind == EntityKind.Bullet){
-            Bullet.updateBullet(room,entity);
+            Bullet.update(room,entity);
         }
         if(entity.kind == EntityKind.Enemy){
-            Enemy.updateEnemy(room,entity);
+            Enemy.update(room,entity);
         }
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
-        //TODO: move into other files
         if(entity.kind == EntityKind.Player){
-            ctx.fillStyle = "#FF0000";
+            Player.draw(ctx,entity);
         }
         if(entity.kind == EntityKind.Bullet){
-            ctx.fillStyle = "#000000";
-            if(entity.euqipped==EuqippedKind.WEAPON_FLAMETHROWER){
-                ctx.fillStyle = "#FFA366";
-            }
+            Bullet.draw(ctx,entity);
         }
         if(entity.kind == EntityKind.Enemy){
-            ctx.fillStyle = "#0000FF";
-            if(entity.euqipped == EuqippedKind.ENEMY_WINGED){
-                ctx.fillStyle = "#54D7FF";
-            }
+            Enemy.draw(ctx,entity);
         }
-        if(entity.kind == EntityKind.Resource){
-            ctx.fillStyle = "#FF00FF";
-        }
-        ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
     }
 }
 

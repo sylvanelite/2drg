@@ -7,7 +7,7 @@ import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
 class Player{
-    static updatePlayer(room:Room,entity:Entity) {
+    static update(room:Room,entity:Entity) {
         const controls =Game.inputs.get(entity.uid);
         let i = 0;
         for (i = 0; i < 3; i+=1) {    
@@ -127,6 +127,10 @@ class Player{
             }
         }
 
+    }
+    static draw(ctx:CanvasRenderingContext2D,entity:Entity){
+        ctx.fillStyle = "#FF0000";
+        ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
     }
 }
 export {Player}
