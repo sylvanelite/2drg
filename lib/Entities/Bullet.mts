@@ -48,13 +48,13 @@ class Bullet{
     }
     static destroyBullet(room:Room,entity:Entity){
         if(entity.euqipped == EuqippedKind.WEAPON_FLAMETHROWER){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,30);
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,10);
         }
         if(entity.euqipped == EuqippedKind.WEAPON_MACHINEGUN){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,30);
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,10);
         }
         if(entity.euqipped == EuqippedKind.WEAPON_PIERCE){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,30);
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,10);
         }
         Room.RemoveEntity(room,entity);
     }
