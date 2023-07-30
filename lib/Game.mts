@@ -195,9 +195,11 @@ class Game extends NetplayState{
         }
         //enemies
         for(const r of this.rooms){
+            //TODO: real init...
+            //enemies (NOTE: should probably be generated via events/waves)
             const eCount = 1+Math.floor(PRNG.prng()*3);
             for(let i=0;i<eCount;i+=1){
-                const enemy = new Entity();//TODO: real init...
+                const enemy = new Entity();
                 enemy.kind = EntityKind.Enemy;
                 enemy.euqipped = EuqippedKind.ENEMY_GRUNT;
                 enemy.hp=100;
@@ -209,6 +211,49 @@ class Game extends NetplayState{
                 enemy.position.y=Math.floor(PRNG.prng()*r.terrain.height);
                 Room.AddEntity(r,enemy);
             }
+            //resources
+            const rCount = 1+Math.floor(PRNG.prng()*6);
+            for(let i=0;i<rCount;i+=1){
+                const resource = new Entity();
+                resource.kind = EntityKind.Resource;
+                const resources = [
+                    EuqippedKind.RESOURCE_BISMORE_BOTTOM,
+                    EuqippedKind.RESOURCE_CROPPA_BOTTOM,
+                    EuqippedKind.RESOURCE_NITRA_BOTTOM,
+                    EuqippedKind.RESOURCE_RED_SUGAR_BOTTOM,
+                    EuqippedKind.RESOURCE_GOLD_BOTTOM
+                ];
+                resource.euqipped = resources[Math.floor(resources.length*PRNG.prng())];
+                resource.sprite = resource.euqipped;
+                resource.position.x=Math.floor(PRNG.prng()*r.terrain.width);
+                resource.position.y=Math.floor(PRNG.prng()*r.terrain.height);
+                //grow resource height +1
+                if(PRNG.prng()>0.6){
+                    const grow = new Entity();
+                    grow.kind = EntityKind.Resource;
+                    if(resource.euqipped == EuqippedKind.RESOURCE_BISMORE_BOTTOM){
+                        grow.euqipped = EuqippedKind.RESOURCE_BISMORE_TOP;
+                    }
+                    if(resource.euqipped == EuqippedKind.RESOURCE_CROPPA_BOTTOM){
+                        grow.euqipped = EuqippedKind.RESOURCE_CROPPA_TOP;
+                    }
+                    if(resource.euqipped == EuqippedKind.RESOURCE_NITRA_BOTTOM){
+                        grow.euqipped = EuqippedKind.RESOURCE_NITRA_TOP;
+                    }
+                    if(resource.euqipped == EuqippedKind.RESOURCE_RED_SUGAR_BOTTOM){
+                        grow.euqipped = EuqippedKind.RESOURCE_RED_SUGAR_TOP;
+                    }
+                    if(resource.euqipped == EuqippedKind.RESOURCE_GOLD_BOTTOM){
+                        grow.euqipped = EuqippedKind.RESOURCE_GOLD_TOP;
+                    }
+                    grow.sprite = grow.euqipped;
+                    grow.position.x=resource.position.x;
+                    grow.position.y=resource.position.y-resource.size.y;
+                    Room.AddEntity(r,grow);
+                }
+                Room.AddEntity(r,resource);
+            }
+
         }
     }
     static inputs: Map<number, NetplayInput>;

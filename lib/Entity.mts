@@ -4,6 +4,7 @@ import {hash,PRNG,CONTROLS,EntityKind,EuqippedKind} from './types.mjs';
 import { Room } from './Room.mjs';
 import { Player } from './Entities/Player.mjs';
 import { Bullet } from './Entities/Bullet.mjs';
+import { Resource } from './Entities/Resource.mjs';
 import { Enemy } from './Entities/Enemy.mjs';
 class Entity{
     static uid=0;
@@ -43,6 +44,7 @@ class Entity{
         if(entity.kind == EntityKind.Enemy){
             Enemy.update(room,entity);
         }
+        //Resource.update (NOTE: resource has no update)
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         if(entity.kind == EntityKind.Player){
@@ -53,6 +55,9 @@ class Entity{
         }
         if(entity.kind == EntityKind.Enemy){
             Enemy.draw(ctx,entity);
+        }
+        if(entity.kind == EntityKind.Resource){
+            Resource.draw(ctx,entity);
         }
     }
 }
