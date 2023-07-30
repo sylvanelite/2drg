@@ -40,7 +40,7 @@ class ImageCache {
         }
         return cachedImage;
     }
-    static drawTile(context:CanvasRenderingContext2D,image:ImageBmp, targetX:number, targetY:number, tile:number, tileWidth:number, tileHeight:number, flipX:number, flipY:number) {
+    static drawTile(context:CanvasRenderingContext2D,image:ImageBmp, targetX:number, targetY:number, tileX:number,tileY:number, tileWidth:number, tileHeight:number, flipX:boolean, flipY:boolean) {
         tileHeight = tileHeight ? tileHeight : tileWidth;
 
         if (!image.loaded || tileWidth > image.data.width || tileHeight > image.data.height) {
@@ -60,8 +60,8 @@ class ImageCache {
         }
         context.drawImage(
             image.data,
-            (Math.floor(tile * tileWidth) % image.data.width) * scale,
-            (Math.floor(tile * tileWidth / image.data.width) * tileHeight) * scale,
+            tileX * scale,
+            tileY * scale,
             tileWidthScaled,
             tileHeightScaled,
             Math.round(targetX) * scaleX - (flipX ? tileWidthScaled : 0),

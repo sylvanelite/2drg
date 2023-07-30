@@ -6,37 +6,61 @@ import { Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
+import { ImageCache } from "../ImageCache.mjs";
+import { sprites,IMAGE_HEIGHT,IMAGE_WIDTH } from "../sprites.mjs";
+const PLAYER_SPRITE = {
+    STANDING_LEFT:0,
+    STANDING_RIGHT:1,
+    MOVING_LEFT:2,
+    MOVING_RIGHT:3,
+    JUMPING_LEFT:4,
+    JUMPING_RIGHT:5,
+    FALLING_LEFT:6,
+    FALLING_RIGHT:7
+};
 class Player{
     static update(room:Room,entity:Entity) {
         const controls =Game.inputs.get(entity.uid);
         let i = 0;
-        for (i = 0; i < 3; i+=1) {    
-            if ( NetplayInput.getPressed(controls,CONTROLS.LEFT)) {
-                if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
-                    entity.position.x -= 1;
-                }
-                while (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + 20, 10, 1)) {
-                    entity.position.y -= 1;
-                }
-            }
-            if (NetplayInput.getPressed(controls,CONTROLS.RIGHT)) {
-                if (!Terrain.hitTest(room.terrain, entity.position.x + 10, entity.position.y, 1, 1)) {
-                    entity.position.x += 1;
-                }
-                while (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + 20, 10, 1)) {
-                    entity.position.y -= 1;
+        const max_h_speed = 2;
+        entity.velocity.x = 0;
+        entity.spriteFrame+=0.2;
+        entity.spriteFrame %=2;
+        if( NetplayInput.getPressed(controls,CONTROLS.LEFT)){
+            entity.velocity.x = -max_h_speed;
+        }
+        if( NetplayInput.getPressed(controls,CONTROLS.RIGHT)){
+            entity.velocity.x = max_h_speed;
+        }
+        if(entity.velocity.x!=0){
+            for (i = 0; i < max_h_speed; i+=1) {
+                if(entity.velocity.x<0){//move left
+                    if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
+                        entity.position.x -= 1;
+                    }
+                    while (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)) {
+                        entity.position.y -= 1;
+                    }
+                }else{//move right
+                    if (!Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y, 1, 1)) {
+                        entity.position.x += 1;
+                    }
+                    while (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)) {
+                        entity.position.y -= 1;
+                    }
                 }
             }
         }
         if (NetplayInput.getPressed(controls,CONTROLS.JUMP)) {
-            entity.velocity.y = -3;
+            entity.velocity.y = -2;
             //Game.gameInstance.jumping = true;//TODO: fix jumping
         }
-        entity.velocity.y+=1; //is this going to work prooperly?
+        entity.velocity.y+=1; 
+        if(entity.velocity.y>2){entity.velocity.y=2;}//max fall speed
         if (entity.velocity.y > 0) {
             //check ground
             for (i = 0; i < entity.velocity.y; i+=1) {
-                if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + 20, 10, 1)) {
+                if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)) {
                     entity.position.y += 1;
                 } else {
                     //Game.gameInstance.jumping = false;//TODO: fix jumping
@@ -45,11 +69,64 @@ class Player{
             }
         } else {
             for (i = 0; i < Math.abs(entity.velocity.y); i+=1) {
-                if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, 10, 1)) {
+                if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, entity.size.x, 1)) {
                     entity.position.y -= 1;
                 } else {
                     entity.velocity.y = 0;
                 }
+            }
+        }
+        //set sprites
+        //standing
+        if(entity.velocity.x==0&&entity.velocity.y==0){
+            //if the sprite is not alreay standing, change it to be standing but work out which way it should be facing
+            if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
+                entity.sprite == PLAYER_SPRITE.FALLING_LEFT||
+                entity.sprite == PLAYER_SPRITE.JUMPING_LEFT){
+                    console.log("LEFT")
+                entity.sprite = PLAYER_SPRITE.STANDING_LEFT;
+            }
+            if(entity.sprite == PLAYER_SPRITE.MOVING_RIGHT||
+                entity.sprite == PLAYER_SPRITE.FALLING_RIGHT||
+                entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT){
+                    console.log("RIGHT")
+                entity.sprite = PLAYER_SPRITE.STANDING_RIGHT;
+            }
+        }
+        if(entity.velocity.y==0){//if on ground
+            if(entity.velocity.x>0){//and moving
+                entity.sprite = PLAYER_SPRITE.MOVING_RIGHT;
+            }
+            if(entity.velocity.x<0){
+                entity.sprite = PLAYER_SPRITE.MOVING_LEFT;
+            }
+        }
+        if(entity.velocity.y<0){
+            if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
+                entity.sprite == PLAYER_SPRITE.FALLING_LEFT||
+                entity.sprite == PLAYER_SPRITE.STANDING_LEFT||
+                entity.velocity.x<0){
+                entity.sprite = PLAYER_SPRITE.JUMPING_LEFT;
+            }
+            if(entity.sprite == PLAYER_SPRITE.MOVING_RIGHT||
+                entity.sprite == PLAYER_SPRITE.FALLING_RIGHT||
+                entity.sprite == PLAYER_SPRITE.STANDING_RIGHT||
+                entity.velocity.x>0){
+                entity.sprite = PLAYER_SPRITE.JUMPING_RIGHT;
+            }
+        }
+        if(entity.velocity.y>0){
+            if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
+                entity.sprite == PLAYER_SPRITE.JUMPING_LEFT||
+                entity.sprite == PLAYER_SPRITE.STANDING_LEFT||
+                entity.velocity.x<0){
+                entity.sprite = PLAYER_SPRITE.FALLING_LEFT;
+            }
+            if(entity.sprite == PLAYER_SPRITE.MOVING_RIGHT||
+                entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT||
+                entity.sprite == PLAYER_SPRITE.STANDING_RIGHT||
+                entity.velocity.x>0){
+                entity.sprite = PLAYER_SPRITE.FALLING_RIGHT;
             }
         }
         //move between rooms, going off one side means going onto another
@@ -129,8 +206,56 @@ class Player{
 
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
+        const image = ImageCache.getImage("./media/sprites.png");
+        if (!image.loaded){return;}
+        let spr = sprites.driller_stand1;
+        let flipX =false;
+        if(entity.sprite == PLAYER_SPRITE.STANDING_LEFT){
+            spr =sprites.driller_stand1;
+            flipX = true;
+        }
+        if(entity.sprite == PLAYER_SPRITE.STANDING_RIGHT){
+            spr =sprites.driller_stand1;
+            flipX = false;
+        }
+        if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT){
+            spr = Math.floor(entity.spriteFrame)==0?
+                sprites.driller_stand1:
+                sprites.driller_stand2;
+            flipX = true;
+        }
+        if(entity.sprite == PLAYER_SPRITE.MOVING_RIGHT){
+            spr = Math.floor(entity.spriteFrame)==0?
+                sprites.driller_stand1:
+                sprites.driller_stand2;
+            flipX = false;
+        }
+        if(entity.sprite == PLAYER_SPRITE.JUMPING_LEFT){
+            spr = Math.floor(entity.spriteFrame)==0?
+                sprites.driller_jet1:
+                sprites.driller_jet2;
+            flipX = true;
+        }
+        if(entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT){
+            spr = Math.floor(entity.spriteFrame)==0?
+                sprites.driller_jet1:
+                sprites.driller_jet2;
+            flipX = false;
+        }
+        if(entity.sprite == PLAYER_SPRITE.FALLING_LEFT){
+            spr = Math.floor(entity.spriteFrame)==0?
+                sprites.driller_fall1:
+                sprites.driller_fall2;
+            flipX = true;
+        }
+        if(entity.sprite == PLAYER_SPRITE.FALLING_RIGHT){
+            spr = Math.floor(entity.spriteFrame)==0?
+                sprites.driller_fall1:
+                sprites.driller_fall2;
+            flipX = false;
+        }
+        ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
+            spr.x,spr.y,spr.w,spr.h,flipX,false);
     }
 }
 export {Player}

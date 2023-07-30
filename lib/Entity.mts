@@ -31,7 +31,7 @@ class Entity{
         this.spriteFrame=0;
         this.position={x:0,y:0};
         this.velocity={x:0,y:0};
-        this.size={x:10,y:20};
+        this.size={x:8,y:8};
     }
     static update(room:Room,entity:Entity){
         if(entity.kind == EntityKind.Player){

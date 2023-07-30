@@ -102,6 +102,7 @@ class Game extends NetplayState{
         super();
         this.tickRate = 30/1000;
         this.ctx = canvas.getContext("2d");
+        this.ctx.imageSmoothingEnabled= false;
         this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldWidth = 24;

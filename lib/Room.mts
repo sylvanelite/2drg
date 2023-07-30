@@ -69,7 +69,7 @@ class Room{
             if(controls.mousePosition){
                 ctx.strokeStyle = '1px solid black';
                 ctx.beginPath();
-                ctx.arc(controls.mousePosition.x,controls.mousePosition.y,10,0,Math.PI*2);
+                ctx.arc(Math.floor(controls.mousePosition.x)-0.5,Math.floor(controls.mousePosition.y)-0.5,10,0,Math.PI*2);
                 ctx.stroke();
             }
         }
