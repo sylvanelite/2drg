@@ -2,7 +2,7 @@
 
 import { NetplayInput, NetplayState } from "../netPeer/netplayInput.mjs";
 import { xyToIdx,CONTROLS,EntityKind,PRNG,EuqippedKind } from "../types.mjs";
-import { Entity } from "../Entity.mjs";
+import { Collision, Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
@@ -202,6 +202,17 @@ class Player{
                         break;
                 }
             }
+        }
+        //==mining
+        if (NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+            //TODO: drawing mining?
+            Collision.checkCollisions(room,entity,(collisionId:number)=>{
+                const ent = room.entities[collisionId];
+                if(ent.kind == EntityKind.Resource){
+                    //TODO: actually gather the resource
+                    Room.RemoveEntity(room,ent);
+                }
+            });
         }
 
     }

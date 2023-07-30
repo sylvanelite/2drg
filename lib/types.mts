@@ -3,7 +3,8 @@ const CONTROLS={
     LEFT:1,
     RIGHT:2,
     JUMP:3,
-    SHOOT:4
+    SHOOT:4,
+    MINE:5
 };
 enum EntityKind{
     Player = 1,

@@ -178,6 +178,8 @@ class Game extends NetplayState{
         this.inputReader.bindings.set('KeyW', CONTROLS.JUMP);
         this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
         this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
+        this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
         //set up objects
         
         this.currentRoom = 500;
