@@ -1,11 +1,11 @@
 
 import { KeyboardAndMouseInputReader } from "./inputController.mjs";
 import { NetplayInput, NetplayState } from "./netPeer/netplayInput.mjs";
-import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind } from "./types.mjs";
+import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind, xyToIdx } from "./types.mjs";
 import { Entity,Collision } from "./Entity.mjs";
 import { Room } from "./Room.mjs";
-import { Terrain } from "./Terrain.mjs";
-
+import { TERRAIN_WIDTH,TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
+import { ConvChain } from "./ConvChain.mjs";
 class Game extends NetplayState{
     static gameInstance:Game;
 //TODO: serialise rooms->entities->terrain
@@ -95,7 +95,7 @@ class Game extends NetplayState{
     ctx:CanvasRenderingContext2D;
     rooms:Array<Room>;
     currentRoom:number;//room for the local player
-    worldWidth:number;
+    worldSize:number;
     playerUid:number;
     tickRate:number;//time until the next update() is called
     constructor(canvas:HTMLCanvasElement) {
@@ -105,16 +105,65 @@ class Game extends NetplayState{
         this.ctx.imageSmoothingEnabled= false;
         this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
-        this.worldWidth = 24;
-        for(let i=0;i<this.worldWidth;i+=1){
-            for(let j=0;j<24;j+=1){
+        this.worldSize = 24;
+        const sample = new Uint8Array([
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,1,0,0,0,1,1,0,1,1,1,0,0,
+            0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+            0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+            0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,
+            0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,
+            0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,
+            0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,
+            0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,
+            0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+            0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+            0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,
+            0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,
+            0,0,0,1,1,1,1,1,1,1,0,0,1,0,0,0,
+            0,0,0,0,1,1,1,0,0,0,0,0,0,1,1,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        ]);
+        const conv = new ConvChain(sample);
+        const dims = 8;//scale factor, convChain will be scaled up to blocks of this size
+        const generated = conv.generate(
+                (this.worldSize*TERRAIN_WIDTH)/dims,
+                (this.worldSize*TERRAIN_HEIGHT)/dims,
+                3,2,6);
+        for(let i=0;i<this.worldSize;i+=1){
+            for(let j=0;j<this.worldSize;j+=1){
                 const r = new Room();
                 r.idx = this.rooms.length;
-                const [x,y] = idxToXy(r.idx,this.worldWidth);
+                const [x,y] = idxToXy(r.idx,this.worldSize);
                 r.x = x;
                 r.y = y;
                 r.terrain = new Terrain();
-                Terrain.fillRect(r.terrain,0,50,r.terrain.width,100);
+                //first pass, fill in solid terrain
+                for(let x=0;x<r.terrain.width;x+=dims){
+                    for(let y=0;y<r.terrain.height;y+=dims){
+                        const generated_x = i*r.terrain.width/dims+x/dims;
+                        const generated_y = j*r.terrain.height/dims+y/dims;
+                        const idx = xyToIdx(generated_x,generated_y, (this.worldSize*TERRAIN_WIDTH)/dims);
+                        if(generated[idx]==1){
+                            Terrain.fillRect(r.terrain,x,y,dims,dims);
+                        }
+                    }
+                }
+                //second pass, smooth out edges
+                //needs to be done in 2 passes, otherwise fillRect will re-fill cleared terrain on the right with sharp edges
+                for(let x=0;x<r.terrain.width;x+=dims){
+                    for(let y=0;y<r.terrain.height;y+=dims){
+                        const generated_x = i*r.terrain.width/dims+x/dims;
+                        const generated_y = j*r.terrain.height/dims+y/dims;
+                        const idx = xyToIdx(generated_x,generated_y, (this.worldSize*TERRAIN_WIDTH)/dims);
+                        if(generated[idx]==0){
+                            Terrain.clearCircle(r.terrain,
+                                Math.floor(x+PRNG.prng()*8),
+                                Math.floor(y+PRNG.prng()*8),
+                                Math.floor(10+PRNG.prng()*20));
+                        }
+                    }
+                }
                 this.rooms.push(r);
             }
         }

@@ -85,13 +85,11 @@ class Player{
             if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
                 entity.sprite == PLAYER_SPRITE.FALLING_LEFT||
                 entity.sprite == PLAYER_SPRITE.JUMPING_LEFT){
-                    console.log("LEFT")
                 entity.sprite = PLAYER_SPRITE.STANDING_LEFT;
             }
             if(entity.sprite == PLAYER_SPRITE.MOVING_RIGHT||
                 entity.sprite == PLAYER_SPRITE.FALLING_RIGHT||
                 entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT){
-                    console.log("RIGHT")
                 entity.sprite = PLAYER_SPRITE.STANDING_RIGHT;
             }
         }
@@ -134,28 +132,28 @@ class Player{
         //move between rooms, going off one side means going onto another
         const buffer = 3;
         if(entity.position.x<0 && room.x>0){
-            const idx = xyToIdx(room.x-1,room.y,Game.gameInstance.worldWidth);
+            const idx = xyToIdx(room.x-1,room.y,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=room.terrain.width-entity.size.x-buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
-        if(entity.position.x+entity.size.x > room.terrain.width&& room.x<Game.gameInstance.worldWidth-1){
-            const idx = xyToIdx(room.x+1,room.y,Game.gameInstance.worldWidth);
+        if(entity.position.x+entity.size.x > room.terrain.width&& room.x<Game.gameInstance.worldSize-1){
+            const idx = xyToIdx(room.x+1,room.y,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
         if(entity.position.y<0 && room.y>0){
-            const idx = xyToIdx(room.x,room.y-1,Game.gameInstance.worldWidth);
+            const idx = xyToIdx(room.x,room.y-1,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y=room.terrain.height-entity.size.y-buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
-        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<Game.gameInstance.worldWidth-1){
-            const idx = xyToIdx(room.x,room.y+1,Game.gameInstance.worldWidth);
+        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<Game.gameInstance.worldSize-1){
+            const idx = xyToIdx(room.x,room.y+1,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y =buffer;

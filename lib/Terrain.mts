@@ -2,7 +2,7 @@ import { xyToIdx,Bit } from "./types.mjs";
 import { ImageCache } from "./ImageCache.mjs";
 
 const TERRAIN_WIDTH = 256;
-const TERRAIN_HEIGHT = 150;
+const TERRAIN_HEIGHT = 128;
 
 class Terrain {
     terrain:Uint8Array;
@@ -22,7 +22,7 @@ class Terrain {
         const remainder = idx%(8);
         return Bit.BIT_CHECK(terrain.terrain[bitIdx],remainder);
     }
-    static #setBit(value:boolean,x:number,y:number,terrain:Terrain){
+    static setBit(value:boolean,x:number,y:number,terrain:Terrain){
         const idx = xyToIdx(x,y,terrain.width);
 		const bitIdx = Math.floor(idx/8);
         const remainder = idx%(8);
@@ -55,7 +55,7 @@ class Terrain {
                 if(i>0&&i<terrain.width-1&& j>0&&j<terrain.height-1){
                         const distSquared = (x-i)*(x-i) + (y-j)*(y-j);
                         if(distSquared<radiusSquared){//clear pixels in 30px radius
-                            Terrain.#setBit(false,i,j,terrain);
+                            Terrain.setBit(false,i,j,terrain);
                         }
                     }
             }
@@ -66,7 +66,7 @@ class Terrain {
         for(let i=x;i<x+w;i+=1){
             for(let j=y;j<y+h;j+=1){
                 if(i>0&&i<terrain.width-1&& j>0&&j<terrain.height-1){
-                        Terrain.#setBit(true,i,j,terrain);
+                        Terrain.setBit(true,i,j,terrain);
                     }
             }
         }
@@ -105,4 +105,4 @@ class Terrain {
     }
 }
 
-export {Terrain};
+export {Terrain,TERRAIN_WIDTH,TERRAIN_HEIGHT};
