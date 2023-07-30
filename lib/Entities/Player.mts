@@ -37,16 +37,16 @@ class Player{
                 if(entity.velocity.x<0){//move left
                     if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
                         entity.position.x -= 1;
-                        if (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)&&
-                           !Terrain.hitTest(room.terrain, entity.position.x, entity.position.y -1, entity.size.x, 1)) {
+                        if (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, 1, 1)&&
+                           !Terrain.hitTest(room.terrain, entity.position.x, entity.position.y -1, 1, 1)) {
                             entity.position.y -= 1;
                         }
                     }
                 }else{//move right
                     if (!Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y, 1, 1)) {
                         entity.position.x += 1;
-                        if (Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y + entity.size.y, entity.size.x, 1)&&
-                            !Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y -1, entity.size.x, 1)) {
+                        if (Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y + entity.size.y, 1, 1)&&
+                            !Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y -1, 1, 1)) {
                             entity.position.y -= 1;
                         }
                     }
