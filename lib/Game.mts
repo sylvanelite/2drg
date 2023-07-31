@@ -34,15 +34,18 @@ class Game extends NetplayState{
                     size_y:e.size.y
                 });
             }
+            const terr = Array(r.terrain.terrain.length);
+            for(let i=0;i<r.terrain.terrain.length;i+=1){
+                terr[i] = r.terrain.terrain[i];
+            }
             const rSerial = {
                 idx:r.idx,
                 x:r.x,
                 y:r.y,
                 players:Array.from(r.players),
                 maxEntities:r.maxEntities,
-                ents
-                //TODO: terrain
-                //TODO: entities...
+                ents,
+                terr
             };
             //if(r.players.size>0){//TODO: serialise only if needed? 
             rooms.push(rSerial);
@@ -87,6 +90,10 @@ class Game extends NetplayState{
                 ent.size.x=e.size_x;
                 ent.size.y=e.size_y;
                 entId+=1;
+            }
+            const terr = value.terr;
+            for(let i=0;i<r.terrain.terrain.length;i+=1){
+                r.terrain.terrain[i] = terr[i];//assumes w/h/length are correct
             }
         }
     }
