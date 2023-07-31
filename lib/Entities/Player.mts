@@ -1,8 +1,8 @@
 
 
-import { NetplayInput, NetplayState } from "../netPeer/netplayInput.mjs";
+import { NetplayInput } from "../netPeer/netplayInput.mjs";
 import { xyToIdx,CONTROLS,EntityKind,PRNG,EuqippedKind } from "../types.mjs";
-import { Collision, Entity } from "../Entity.mjs";
+import { Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
@@ -175,24 +175,29 @@ class Player{
                 bulletEntity.position.y = entity.position.y;
                 const aimingAngleRads = Math.atan2(mousePos.y-entity.position.y,mousePos.x-entity.position.x) ;//* 180 / Math.PI to get deg
                 switch(entity.euqipped){
-                    case EuqippedKind.WEAPON_FLAMETHROWER:
+                    case EuqippedKind.WEAPON_FLAMETHROWER:{
                         entity.cooldown = 1;//cooldown 
                         bulletEntity.hp = 1;//damage
                         bulletEntity.cooldown = 20;//bullet lifetime
-                        //TODO: spread...
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*5;//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*5;//speed
+                        const spreadAngle = 5/( 180 / Math.PI);//5 degrees in rad
+                        const spread = PRNG.prng()*spreadAngle-PRNG.prng()*spreadAngle;
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*5;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*5;//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
-                    case EuqippedKind.WEAPON_MACHINEGUN:
+                    }
+                    case EuqippedKind.WEAPON_MACHINEGUN:{
                         entity.cooldown = 5;//cooldown 
                         bulletEntity.hp = 5;//damage
                         bulletEntity.cooldown = 100;//bullet lifetime
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
+                        const spreadAngle = 2/( 180 / Math.PI);
+                        const spread = PRNG.prng()*spreadAngle-PRNG.prng()*spreadAngle;
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*10;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*10;//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
-                    case EuqippedKind.WEAPON_PIERCE:
+                    }
+                    case EuqippedKind.WEAPON_SNIPER:{
                         entity.cooldown = 50;//cooldown 
                         bulletEntity.hp = 50;//damage
                         bulletEntity.cooldown = 100;//bullet lifetime
@@ -200,19 +205,28 @@ class Player{
                         bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
+                    }
                 }
             }
         }
         //==mining
         if (NetplayInput.getPressed(controls,CONTROLS.MINE)) {
-            //TODO: drawing mining?
-            Collision.checkCollisions(room,entity,(collisionId:number)=>{
-                const ent = room.entities[collisionId];
-                if(ent.kind == EntityKind.Resource){
-                    //TODO: actually gather the resource
-                    Room.RemoveEntity(room,ent);
-                }
-            });
+            const mineEntity = new Entity();
+            mineEntity.kind = EntityKind.Bullet;
+            mineEntity.euqipped = EuqippedKind.WEAPON_MINE;//bullet type match the weapon that shot it
+            mineEntity.size.x = 2;
+            mineEntity.size.y = 2;
+
+            const mousePos =controls.mousePosition;
+            const aimingAngleRads = Math.atan2(mousePos.y-entity.position.y,mousePos.x-entity.position.x) ;//* 180 / Math.PI to get deg
+            mineEntity.position.x = entity.position.x+Math.floor(entity.size.x/2+Math.cos(aimingAngleRads)*(entity.size.x/2+2));
+            mineEntity.position.y = entity.position.y+Math.floor(entity.size.y/2+Math.sin(aimingAngleRads)*(entity.size.y/2+2));
+            /*const facingLeft = (entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
+                    entity.sprite == PLAYER_SPRITE.FALLING_LEFT||
+                    entity.sprite == PLAYER_SPRITE.JUMPING_LEFT||
+                    entity.sprite == PLAYER_SPRITE.STANDING_LEFT);*/
+            mineEntity.cooldown = 1;
+            Room.AddEntity(room,mineEntity);
         }
 
     }

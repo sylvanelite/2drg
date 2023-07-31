@@ -1,22 +1,11 @@
 
-import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind } from "../types.mjs";
-import { Entity,Collision } from "../Entity.mjs";
+import { idxToXy,CONTROLS,PRNG,EuqippedKind } from "../types.mjs";
+import { Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 class Enemy{
     
     static update(room:Room,entity:Entity){
-        //collision check for bullets
-        Collision.checkCollisions(room,entity,(collisionId:number)=>{
-            const ent = room.entities[collisionId];
-            if(ent.kind == EntityKind.Bullet){
-                //bullet collide
-                entity.hp-=ent.hp;
-                if(ent.euqipped == EuqippedKind.WEAPON_MACHINEGUN){
-                    Room.RemoveEntity(room,ent);//for type=machinegun, destroy bullet on collide
-                }
-            }
-        });
         if(entity.hp<1){
             Room.RemoveEntity(room,entity);
         }

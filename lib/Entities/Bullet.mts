@@ -37,6 +37,27 @@ class Bullet{
                 break;
             }
         }
+        //destroy on collide with other
+        Collision.checkCollisions(room,entity,(collisionId:number)=>{
+            const ent = room.entities[collisionId];
+            if(ent.kind == EntityKind.Resource &&
+                entity.euqipped == EuqippedKind.WEAPON_MINE){
+                //TODO: actually gather the resource
+                Room.RemoveEntity(room,ent);
+                Room.RemoveEntity(room,entity);
+            }
+            if(ent.kind == EntityKind.Enemy){
+                //bullet collide
+                ent.hp-=entity.hp;
+                if(entity.euqipped == EuqippedKind.WEAPON_MACHINEGUN){
+                    Room.RemoveEntity(room,entity);
+                }
+                if(entity.euqipped == EuqippedKind.WEAPON_SNIPER){
+                    Room.RemoveEntity(room,entity);
+                }
+                //flamethrower pierces, so don't destroy on collision
+            }
+        });
         if(entity.position.x<0||entity.position.x>room.terrain.width||
             entity.position.y<0||entity.position.y>room.terrain.height){
             Room.RemoveEntity(room,entity);//if going out of bounds, remove without destroy (explode)
@@ -45,17 +66,11 @@ class Bullet{
         if(entity.cooldown<0){
             Room.RemoveEntity(room,entity);//bullet timed out
         }
+        if(entity.euqipped == EuqippedKind.WEAPON_MINE){
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,8);
+        }
     }
     static destroyBullet(room:Room,entity:Entity){
-        if(entity.euqipped == EuqippedKind.WEAPON_FLAMETHROWER){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,10);
-        }
-        if(entity.euqipped == EuqippedKind.WEAPON_MACHINEGUN){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,10);
-        }
-        if(entity.euqipped == EuqippedKind.WEAPON_PIERCE){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,10);
-        }
         Room.RemoveEntity(room,entity);
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){

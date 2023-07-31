@@ -14,8 +14,9 @@ enum EntityKind{
 }
 enum EuqippedKind{
     WEAPON_FLAMETHROWER=1,
-    WEAPON_PIERCE=2,
+    WEAPON_SNIPER=2,
     WEAPON_MACHINEGUN=3,
+    WEAPON_MINE=4,
 
     ENEMY_GRUNT=10,
     ENEMY_WINGED=11,

@@ -54,11 +54,15 @@ class Game extends NetplayState{
         return {
             currentRoom:this.currentRoom,
             EnityUid:Entity.uid,
-            rooms
+            rooms,
             //these shouldn't change after init(), so don't need to be serialised
             //playerUid:this.playerUid,
             //worldWidth:this.worldWidth,
             //tickRate:this.tickRate
+            RNG_A:PRNG.RNG_A,
+            RNG_B:PRNG.RNG_B,
+            RNG_C:PRNG.RNG_C,
+            RNG_D:PRNG.RNG_D,
         };
     }
     deserialize(value: any) { 
@@ -96,6 +100,10 @@ class Game extends NetplayState{
                 r.terrain.terrain[i] = terr[i];//assumes w/h/length are correct
             }
         }
+        PRNG.RNG_A = value.RNG_A;
+        PRNG.RNG_B = value.RNG_B;
+        PRNG.RNG_C = value.RNG_C;
+        PRNG.RNG_D = value.RNG_D;
     }
 
     inputReader:KeyboardAndMouseInputReader;
@@ -133,7 +141,7 @@ class Game extends NetplayState{
         this.inputReader.bindings.set('KeyD', CONTROLS.RIGHT);
         this.inputReader.bindings.set('KeyA', CONTROLS.LEFT);
         this.inputReader.bindings.set('KeyW', CONTROLS.JUMP);
-        this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('Space', CONTROLS.MINE);
         this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
         this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
         this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
