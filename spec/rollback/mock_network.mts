@@ -1,6 +1,6 @@
 import { RollbackNetcode } from "../../lib/netPeer/rollback.mjs";
 import { NetplayInput } from "../../lib/netPeer/netplayInput.mjs";
-import { NW,IConnection } from "../../lib/network.mjs";
+import { NW,IConnection } from "../../lib/netPeer/network.mjs";
 
 interface IPlayerNum{
     peerid:string,

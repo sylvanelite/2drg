@@ -69,7 +69,8 @@ class KeyboardAndMouseInputReader extends InputReader {
                 NetplayInput.setReleased(this.keyboardInput,bind);
             },
             false );
-      const root = document.body;  
+      const root = canvas.parentElement;//assumes this is equivalent to: document.body,
+                                        //don't reference document directly so that it doesn't need to be mocked
       root.addEventListener( "keydown", (event) => {
           if (event.repeat) return;
           if(!this.bindings.has(event.code)){return;}

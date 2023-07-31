@@ -1,5 +1,5 @@
 
-import { NW}from "./network.mjs";
+import { NW}from "./netPeer/network.mjs";
 import { NetplayInput } from "./netPeer/netplayInput.mjs";
 import { RollbackNetcode } from "./netPeer/rollback.mjs";
 import { Peer } from "./peer/peerjs.mjs";

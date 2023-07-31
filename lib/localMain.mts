@@ -1,4 +1,4 @@
-import {Main} from "./main.mjs";
+import { Main } from "./main.mjs";
 import { Game } from "./Game.mjs";
 
 class LocalMain{
@@ -20,7 +20,6 @@ class LocalMain{
     //should we modify RB to accept a non-network instance?
     begin(){
         LocalMain.#game = Main.init(0,1);
-        const canvas = document.getElementById("canvas") as HTMLCanvasElement;
         setInterval(LocalMain.#mainLoop, LocalMain.#game.tickRate*1000);
         requestAnimationFrame(LocalMain.#renderLoop);
     };

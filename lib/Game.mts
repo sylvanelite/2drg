@@ -113,6 +113,31 @@ class Game extends NetplayState{
         this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldSize = 24;
+        for(let i=0;i<this.worldSize;i+=1){
+            for(let j=0;j<this.worldSize;j+=1){
+                const r = new Room();
+                r.idx = this.rooms.length;
+                const [x,y] = idxToXy(r.idx,this.worldSize);
+                r.x = x;
+                r.y = y;
+                r.terrain = new Terrain();
+                this.rooms.push(r);
+            }
+        }
+    }
+    init(playerId:number,playerCount:number){
+        //note:bindings is a bitmask, should cap at ~32 
+        this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
+        this.inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
+        this.inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
+        this.inputReader.bindings.set('KeyD', CONTROLS.RIGHT);
+        this.inputReader.bindings.set('KeyA', CONTROLS.LEFT);
+        this.inputReader.bindings.set('KeyW', CONTROLS.JUMP);
+        this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
+        this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
+        this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
+        //set up terrain
         const sample = new Uint8Array([
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
             0,0,0,0,1,0,0,0,1,1,0,1,1,1,0,0,
@@ -137,56 +162,35 @@ class Game extends NetplayState{
                 (this.worldSize*TERRAIN_WIDTH)/dims,
                 (this.worldSize*TERRAIN_HEIGHT)/dims,
                 3,2,6);
-        for(let i=0;i<this.worldSize;i+=1){
-            for(let j=0;j<this.worldSize;j+=1){
-                const r = new Room();
-                r.idx = this.rooms.length;
-                const [x,y] = idxToXy(r.idx,this.worldSize);
-                r.x = x;
-                r.y = y;
-                r.terrain = new Terrain();
-                //first pass, fill in solid terrain
-                for(let x=0;x<r.terrain.width;x+=dims){
-                    for(let y=0;y<r.terrain.height;y+=dims){
-                        const generated_x = i*r.terrain.width/dims+x/dims;
-                        const generated_y = j*r.terrain.height/dims+y/dims;
-                        const idx = xyToIdx(generated_x,generated_y, (this.worldSize*TERRAIN_WIDTH)/dims);
-                        if(generated[idx]==1){
-                            Terrain.fillRect(r.terrain,x,y,dims,dims);
-                        }
+        for(const r of this.rooms){
+            r.terrain = new Terrain();
+            //first pass, fill in solid terrain
+            for(let x=0;x<r.terrain.width;x+=dims){
+                for(let y=0;y<r.terrain.height;y+=dims){
+                    const generated_x = r.x*r.terrain.width/dims+x/dims;
+                    const generated_y = r.y*r.terrain.height/dims+y/dims;
+                    const idx = xyToIdx(generated_x,generated_y, (this.worldSize*TERRAIN_WIDTH)/dims);
+                    if(generated[idx]==1){
+                        Terrain.fillRect(r.terrain,x,y,dims,dims);
                     }
                 }
-                //second pass, smooth out edges
-                //needs to be done in 2 passes, otherwise fillRect will re-fill cleared terrain on the right with sharp edges
-                for(let x=0;x<r.terrain.width;x+=dims){
-                    for(let y=0;y<r.terrain.height;y+=dims){
-                        const generated_x = i*r.terrain.width/dims+x/dims;
-                        const generated_y = j*r.terrain.height/dims+y/dims;
-                        const idx = xyToIdx(generated_x,generated_y, (this.worldSize*TERRAIN_WIDTH)/dims);
-                        if(generated[idx]==0){
-                            Terrain.clearCircle(r.terrain,
-                                Math.floor(x+PRNG.prng()*8),
-                                Math.floor(y+PRNG.prng()*8),
-                                Math.floor(10+PRNG.prng()*20));
-                        }
+            }
+            //second pass, smooth out edges
+            //needs to be done in 2 passes, otherwise fillRect will re-fill cleared terrain on the right with sharp edges
+            for(let x=0;x<r.terrain.width;x+=dims){
+                for(let y=0;y<r.terrain.height;y+=dims){
+                    const generated_x = r.x*r.terrain.width/dims+x/dims;
+                    const generated_y = r.y*r.terrain.height/dims+y/dims;
+                    const idx = xyToIdx(generated_x,generated_y, (this.worldSize*TERRAIN_WIDTH)/dims);
+                    if(generated[idx]==0){
+                        Terrain.clearCircle(r.terrain,
+                            Math.floor(x+PRNG.prng()*8),
+                            Math.floor(y+PRNG.prng()*8),
+                            Math.floor(10+PRNG.prng()*20));
                     }
                 }
-                this.rooms.push(r);
             }
         }
-    }
-    init(playerId:number,playerCount:number){
-        //note:bindings is a bitmask, should cap at ~32 
-        this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
-        this.inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);
-        this.inputReader.bindings.set('ArrowUp', CONTROLS.JUMP);
-        this.inputReader.bindings.set('KeyD', CONTROLS.RIGHT);
-        this.inputReader.bindings.set('KeyA', CONTROLS.LEFT);
-        this.inputReader.bindings.set('KeyW', CONTROLS.JUMP);
-        this.inputReader.bindings.set('Space', CONTROLS.SHOOT);
-        this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
-        this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
-        this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
         //set up objects
         
         this.currentRoom = 500;
