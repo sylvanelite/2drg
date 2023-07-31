@@ -122,6 +122,7 @@ class Game extends NetplayState{
         this.worldSize = 12;
     }
     init(playerId:number,playerCount:number){
+        Entity.uid = 0;//reset the ID count so that playerIds are kept in sync
         //note:bindings is a bitmask, should cap at ~32 
         this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
         this.inputReader.bindings.set('ArrowLeft', CONTROLS.LEFT);

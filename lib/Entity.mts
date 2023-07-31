@@ -137,10 +137,10 @@ class Collision {
 	}
     static touches(entity:Entity, other:Entity) {
         return !(
-            entity.position.x >=other.position.x + other.size.x ||
+            entity.position.x >= other.position.x + other.size.x ||
             entity.position.x + entity.size.x <= other.position.x ||
             entity.position.y >= other.position.y + other.size.y ||
-            entity.position.y + entity.size.y <= other.size.y
+            entity.position.y + entity.size.y <= other.position.y
         )
     }
 	static checkCollisions(room:Room,entity:Entity,collideCallback:Function){
