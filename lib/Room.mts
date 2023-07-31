@@ -92,7 +92,7 @@ class Room{
             ctx.fillRect(0,0,2,room.terrain.height);
         }
         if(room.locked_R||room.x==Game.gameInstance.worldSize-1){
-            ctx.fillRect(0,room.terrain.width-2,2,room.terrain.height);
+            ctx.fillRect(room.terrain.width-2,0,2,room.terrain.height);
         }
     }
 

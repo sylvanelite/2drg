@@ -214,21 +214,15 @@ class Player{
             }
         }
         //==mining
-        if (controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+        if (NetplayInput.getPressed(controls,CONTROLS.MINE)) {
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
             mineEntity.euqipped = EuqippedKind.WEAPON_MINE;//bullet type match the weapon that shot it
             mineEntity.size.x = 2;
             mineEntity.size.y = 2;
 
-            const mousePos =controls.mousePosition;
-            const aimingAngleRads = Math.atan2(mousePos.y-entity.position.y,mousePos.x-entity.position.x) ;//* 180 / Math.PI to get deg
-            mineEntity.position.x = entity.position.x+Math.floor(entity.size.x/2+Math.cos(aimingAngleRads)*(entity.size.x/2+2));
-            mineEntity.position.y = entity.position.y+Math.floor(entity.size.y/2+Math.sin(aimingAngleRads)*(entity.size.y/2+2));
-            /*const facingLeft = (entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
-                    entity.sprite == PLAYER_SPRITE.FALLING_LEFT||
-                    entity.sprite == PLAYER_SPRITE.JUMPING_LEFT||
-                    entity.sprite == PLAYER_SPRITE.STANDING_LEFT);*/
+            mineEntity.position.x = entity.position.x+Math.floor(entity.size.x/2);
+            mineEntity.position.y = entity.position.y+Math.floor(entity.size.y/2);
             mineEntity.cooldown = 1;
             Room.AddEntity(room,mineEntity);
         }

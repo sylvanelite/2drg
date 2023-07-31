@@ -6,7 +6,7 @@ class Conductor{
         const waveSpwaner = new Entity();
         waveSpwaner.kind = EntityKind.Conductor;
         waveSpwaner.euqipped = waveKind;
-        waveSpwaner.cooldown = 3000;//duration of the wave
+        waveSpwaner.cooldown = 500;//duration of the wave
         waveSpwaner.position.x = Math.floor(PRNG.prng()*room.terrain.width);
         waveSpwaner.position.y = Math.floor(PRNG.prng()*room.terrain.height);
         if(waveKind==EuqippedKind.WAVE_LOCKED_ROOM){
@@ -20,7 +20,7 @@ class Conductor{
 
     static update(room:Room,entity:Entity){
         //wave updating
-        if(PRNG.prng()<0.2){//rate of spawn per frame
+        if(PRNG.prng()<0.02){//rate of spawn per frame
             const enemy = new Entity();
             enemy.kind = EntityKind.Enemy;
             enemy.euqipped = EuqippedKind.ENEMY_GRUNT;
