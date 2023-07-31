@@ -7,6 +7,7 @@ import { Bullet } from './Entities/Bullet.mjs';
 import { Resource } from './Entities/Resource.mjs';
 import { Enemy } from './Entities/Enemy.mjs';
 import { Conductor } from './Entities/Conductor.mjs';
+
 class Entity{
     static uid=0;
     uid:number;//globally unique id, preserved across room boundaries

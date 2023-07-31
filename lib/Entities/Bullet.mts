@@ -30,7 +30,6 @@ class Bullet{
                 y1 += sy;
             }
             //update coordinates
-            //TODO: if solid.... (if need to check terrain...)
             entity.position.x = x1;
             entity.position.y = y1;
             if (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, entity.size.x, entity.size.y)) {

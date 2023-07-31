@@ -215,6 +215,7 @@ class Player{
         }
         //==mining
         if (NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+            //TODO: really should have a mining cooldown
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
             mineEntity.euqipped = EuqippedKind.WEAPON_MINE;//bullet type match the weapon that shot it
