@@ -39,6 +39,10 @@ class Game extends NetplayState{
                 terr[i] = r.terrain.terrain[i];
             }
             const rSerial = {
+                lock_L:r.locked_L,
+                lock_R:r.locked_R,
+                lock_U:r.locked_U,
+                lock_D:r.locked_D,
                 idx:r.idx,
                 x:r.x,
                 y:r.y,
@@ -74,6 +78,10 @@ class Game extends NetplayState{
             tgt.y = r.y;
             tgt.players = new Set(r.players);
             tgt.maxEntities = r.maxEntities;
+            tgt.locked_L = r.lock_L;
+            tgt.locked_R = r.lock_R;
+            tgt.locked_U = r.lock_U;
+            tgt.locked_D = r.lock_D;
             let entId = 0;
             for(const e of r.ents){
                 const ent = tgt.entities[entId];
@@ -214,6 +222,13 @@ class Game extends NetplayState{
             playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
             Room.AddEntity(startingRoom,playerEntity);
         }
+        const startingResource = new Entity();//for testing, triggers wave
+        startingResource.kind = EntityKind.Resource;
+        startingResource.euqipped = EuqippedKind.RESOURCE_EGG;
+        startingResource.position.x=Math.floor(startingRoom.terrain.width/2);
+        startingResource.position.y=Math.floor(startingRoom.terrain.height/2);
+        startingResource.hp=100;
+        Room.AddEntity(startingRoom,startingResource);
         //enemies
         for(const r of this.rooms){
             //TODO: real init...
@@ -242,14 +257,21 @@ class Game extends NetplayState{
                     EuqippedKind.RESOURCE_CROPPA_BOTTOM,
                     EuqippedKind.RESOURCE_NITRA_BOTTOM,
                     EuqippedKind.RESOURCE_RED_SUGAR_BOTTOM,
-                    EuqippedKind.RESOURCE_GOLD_BOTTOM
+                    EuqippedKind.RESOURCE_GOLD_BOTTOM,
+                    
+                    EuqippedKind.RESOURCE_EGG,
+                    EuqippedKind.RESOURCE_AQUARQ,
+                    EuqippedKind.RESOURCE_FOSSIL,
                 ];
                 resource.euqipped = resources[Math.floor(resources.length*PRNG.prng())];
                 resource.sprite = resource.euqipped;
                 resource.position.x=Math.floor(PRNG.prng()*r.terrain.width);
                 resource.position.y=Math.floor(PRNG.prng()*r.terrain.height);
+                resource.hp=100;
                 //grow resource height +1
-                if(PRNG.prng()>0.6){
+                if(PRNG.prng()>0.6 && resource.euqipped!= EuqippedKind.RESOURCE_EGG
+                                   && resource.euqipped!= EuqippedKind.RESOURCE_AQUARQ
+                                   && resource.euqipped!= EuqippedKind.RESOURCE_FOSSIL){
                     const grow = new Entity();
                     grow.kind = EntityKind.Resource;
                     if(resource.euqipped == EuqippedKind.RESOURCE_BISMORE_BOTTOM){
@@ -270,11 +292,11 @@ class Game extends NetplayState{
                     grow.sprite = grow.euqipped;
                     grow.position.x=resource.position.x;
                     grow.position.y=resource.position.y-resource.size.y;
+                    grow.hp = 100;
                     Room.AddEntity(r,grow);
                 }
                 Room.AddEntity(r,resource);
             }
-
         }
     }
     static inputs: Map<number, NetplayInput>;

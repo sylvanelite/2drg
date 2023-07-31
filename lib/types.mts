@@ -11,6 +11,7 @@ enum EntityKind{
     Enemy = 10,
     Bullet = 100,
     Resource = 1000,
+    Conductor = 10000
 }
 enum EuqippedKind{
     WEAPON_FLAMETHROWER=1,
@@ -30,7 +31,14 @@ enum EuqippedKind{
     RESOURCE_RED_SUGAR_TOP=106,
     RESOURCE_RED_SUGAR_BOTTOM=107,
     RESOURCE_GOLD_TOP=108,
-    RESOURCE_GOLD_BOTTOM=109
+    RESOURCE_GOLD_BOTTOM=109,
+
+    RESOURCE_EGG=200,
+    RESOURCE_AQUARQ=201,
+    RESOURCE_FOSSIL=202,
+
+    WAVE_LOCKED_ROOM=10000,
+    WAVE_OPEN_ROOM=10001
 }
 
 //https://burtleburtle.net/bob/rand/smallprng.html (I wrote this PRNG. I place it in the public domain. )

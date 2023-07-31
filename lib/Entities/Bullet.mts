@@ -4,6 +4,7 @@ import { idxToXy,CONTROLS,EntityKind,PRNG,EuqippedKind } from "../types.mjs";
 import { Entity,Collision } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
+
 class Bullet{
     static update(room:Room,entity:Entity) {
         //bresenham
@@ -42,8 +43,7 @@ class Bullet{
             const ent = room.entities[collisionId];
             if(ent.kind == EntityKind.Resource &&
                 entity.euqipped == EuqippedKind.WEAPON_MINE){
-                //TODO: actually gather the resource
-                Room.RemoveEntity(room,ent);
+                ent.hp=0;//0 hp will trigger resource gathering
                 Room.RemoveEntity(room,entity);
             }
             if(ent.kind == EntityKind.Enemy){
@@ -67,7 +67,7 @@ class Bullet{
             Room.RemoveEntity(room,entity);//bullet timed out
         }
         if(entity.euqipped == EuqippedKind.WEAPON_MINE){
-            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,8);
+            Terrain.clearCircle(room.terrain,entity.position.x,entity.position.y,16);
         }
     }
     static destroyBullet(room:Room,entity:Entity){

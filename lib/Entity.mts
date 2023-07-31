@@ -6,6 +6,7 @@ import { Player } from './Entities/Player.mjs';
 import { Bullet } from './Entities/Bullet.mjs';
 import { Resource } from './Entities/Resource.mjs';
 import { Enemy } from './Entities/Enemy.mjs';
+import { Conductor } from './Entities/Conductor.mjs';
 class Entity{
     static uid=0;
     uid:number;//globally unique id, preserved across room boundaries
@@ -44,7 +45,12 @@ class Entity{
         if(entity.kind == EntityKind.Enemy){
             Enemy.update(room,entity);
         }
-        //Resource.update (NOTE: resource has no update)
+        if(entity.kind == EntityKind.Conductor){
+            Conductor.update(room,entity);
+        }
+        if(entity.kind == EntityKind.Resource){
+            Resource.update(room,entity);
+        }
     }
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         if(entity.kind == EntityKind.Player){

@@ -4,12 +4,22 @@ import { Entity,Collision } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { ImageCache } from "../ImageCache.mjs";
 import { sprites } from "../sprites.mjs";
+import { Conductor } from "./Conductor.mjs";
 class Resource{
     
     static update(room:Room,entity:Entity){
-        //NOTE: this is currently not called, if adding code here, make sure to update Entity.mts   
+        if(entity.hp<1){//hp 0 means the resource has been collected
+            Resource.collectResource(room,entity);
+        }
     }
     
+    static collectResource(room:Room,entity:Entity){
+        if(entity.euqipped == EuqippedKind.RESOURCE_EGG){
+            Conductor.TiggerWave(room,EuqippedKind.WAVE_LOCKED_ROOM);
+        }
+        Room.RemoveEntity(room,entity);
+    }
+
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         const image = ImageCache.getImage("./media/sprites.png");
         if (!image.loaded){return;}
@@ -43,6 +53,15 @@ class Resource{
         }
         if(entity.sprite == EuqippedKind.RESOURCE_GOLD_BOTTOM){
             spr = sprites.nitra_bottom;
+        }
+        if(entity.sprite == EuqippedKind.RESOURCE_AQUARQ){
+            spr = sprites.aquarq;
+        }
+        if(entity.sprite == EuqippedKind.RESOURCE_EGG){
+            spr = sprites.egg;
+        }
+        if(entity.sprite == EuqippedKind.RESOURCE_FOSSIL){
+            spr = sprites.fossil;
         }
         ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
             spr.x,spr.y,spr.w,spr.h,false,false);

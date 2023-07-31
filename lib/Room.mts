@@ -10,10 +10,18 @@ class Room{
     maxEntities:number;
     terrain:Terrain;
     players:Set<number>;//record which players are in the room for fast lookup
+    locked_L:boolean;
+    locked_R:boolean;
+    locked_U:boolean;
+    locked_D:boolean;
     constructor(){
         this.entities = [];
         this.maxEntities = 0;
         this.players = new Set();
+        this.locked_L = false;
+        this.locked_R = false;
+        this.locked_U = false;
+        this.locked_D = false;
     }
     static MoveEntity(startRoom:Room,endRoom:Room,entity:Entity){
         //note: if moving in one direction, 
@@ -71,6 +79,20 @@ class Room{
                 ctx.arc(Math.floor(controls.mousePosition.x)-0.5,Math.floor(controls.mousePosition.y)-0.5,10,0,Math.PI*2);
                 ctx.stroke();
             }
+        }
+        ctx.fillStyle = "#FF0000";
+        //red line on locked sides
+        if(room.locked_D||room.y==Game.gameInstance.worldSize-1){
+            ctx.fillRect(0,room.terrain.height-2,room.terrain.width,2);
+        }
+        if(room.locked_U||room.y==0){
+            ctx.fillRect(0,0,room.terrain.width,2);
+        }
+        if(room.locked_L||room.x==0 ){
+            ctx.fillRect(0,0,2,room.terrain.height);
+        }
+        if(room.locked_R||room.x==Game.gameInstance.worldSize-1){
+            ctx.fillRect(0,room.terrain.width-2,2,room.terrain.height);
         }
     }
 

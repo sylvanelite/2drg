@@ -130,34 +130,39 @@ class Player{
         }
         //move between rooms, going off one side means going onto another
         const buffer = 3;
-        if(entity.position.x<0 && room.x>0){
+        if(entity.position.x<0 && room.x>0 && !room.locked_L){
             const idx = xyToIdx(room.x-1,room.y,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=room.terrain.width-entity.size.x-buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
-        if(entity.position.x+entity.size.x > room.terrain.width&& room.x<Game.gameInstance.worldSize-1){
+        if(entity.position.x+entity.size.x > room.terrain.width&& room.x<Game.gameInstance.worldSize-1 && !room.locked_R){
             const idx = xyToIdx(room.x+1,room.y,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.x=buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
-        if(entity.position.y<0 && room.y>0){
+        if(entity.position.y<0 && room.y>0 && !room.locked_U){
             const idx = xyToIdx(room.x,room.y-1,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y=room.terrain.height-entity.size.y-buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
-        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<Game.gameInstance.worldSize-1){
+        if(entity.position.y+entity.size.y > room.terrain.height&& room.y<Game.gameInstance.worldSize-1 && !room.locked_D){
             const idx = xyToIdx(room.x,room.y+1,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
             Room.MoveEntity(room,targetRoom,entity);
             entity.position.y =buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
+        //if hit edge of map, or edge of locked room, prevent going out-of-bounds
+        if(entity.position.x<0){ entity.position.x=1;}
+        if(entity.position.y<0){ entity.position.y=1;}
+        if(entity.position.x+entity.size.x > room.terrain.width){ entity.position.x=room.terrain.width-entity.size.x-1;}
+        if(entity.position.y+entity.size.y > room.terrain.height){ entity.position.y=room.terrain.height-entity.size.y-1;}
         //==shooting (TODO: spawn bullet & bresenham)
         if(entity.cooldown>0){//canshoot
             entity.cooldown-=1;
@@ -209,7 +214,7 @@ class Player{
             }
         }
         //==mining
-        if (NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+        if (controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.MINE)) {
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
             mineEntity.euqipped = EuqippedKind.WEAPON_MINE;//bullet type match the weapon that shot it
