@@ -1,4 +1,5 @@
 import {Main} from "./main.mjs";
+import { Game } from "./Game.mjs";
 
 class LocalMain{
     static #inputs = new Map();
@@ -13,7 +14,7 @@ class LocalMain{
         requestAnimationFrame(LocalMain.#renderLoop);
 
     }
-    static #game:any;
+    static #game:Game;
     constructor(){ }
     //TOOD: instead of having this as its own class
     //should we modify RB to accept a non-network instance?
