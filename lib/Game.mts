@@ -95,9 +95,8 @@ class Game extends NetplayState{
                 ent.size.y=e.size_y;
                 entId+=1;
             }
-            const terr = value.terr;
-            for(let i=0;i<r.terrain.terrain.length;i+=1){
-                r.terrain.terrain[i] = terr[i];//assumes w/h/length are correct
+            for(let i=0;i<tgt.terrain.terrain.length;i+=1){
+                tgt.terrain.terrain[i] = r.terr[i];//assumes w/h/length are correct
             }
         }
         PRNG.RNG_A = value.RNG_A;
@@ -121,17 +120,6 @@ class Game extends NetplayState{
         this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldSize = 12;
-        for(let i=0;i<this.worldSize;i+=1){
-            for(let j=0;j<this.worldSize;j+=1){
-                const r = new Room();
-                r.idx = this.rooms.length;
-                const [x,y] = idxToXy(r.idx,this.worldSize);
-                r.x = x;
-                r.y = y;
-                r.terrain = new Terrain();
-                this.rooms.push(r);
-            }
-        }
     }
     init(playerId:number,playerCount:number){
         //note:bindings is a bitmask, should cap at ~32 
@@ -145,6 +133,18 @@ class Game extends NetplayState{
         this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
         this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
         this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
+        //set up rooms
+        for(let i=0;i<this.worldSize;i+=1){
+            for(let j=0;j<this.worldSize;j+=1){
+                const r = new Room();
+                r.idx = this.rooms.length;
+                const [x,y] = idxToXy(r.idx,this.worldSize);
+                r.x = x;
+                r.y = y;
+                r.terrain = new Terrain();
+                this.rooms.push(r);
+            }
+        }
         //set up terrain
         const sample = new Uint8Array([
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

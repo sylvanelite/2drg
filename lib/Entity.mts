@@ -1,6 +1,6 @@
 
 
-import {hash,PRNG,CONTROLS,EntityKind,EuqippedKind} from './types.mjs';
+import {hash,EntityKind,EuqippedKind} from './types.mjs';
 import { Room } from './Room.mjs';
 import { Player } from './Entities/Player.mjs';
 import { Bullet } from './Entities/Bullet.mjs';

@@ -10,7 +10,6 @@ class Room{
     maxEntities:number;
     terrain:Terrain;
     players:Set<number>;//record which players are in the room for fast lookup
-    static MAX_ENTIES = 500;
     constructor(){
         this.entities = [];
         this.maxEntities = 0;
