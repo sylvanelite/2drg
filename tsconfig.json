@@ -8,9 +8,8 @@
     "sourceMap": true,
     "target": "esnext",
 	"declaration":true,
-	"composite":true,
-    "rootDir":"./lib"
+	"composite":true
   },
-  "include": ["./lib/**/*"],
+  "include": ["./lib/**/*","spec/**/*"],
   "exclude": ["node_modules"]
 }

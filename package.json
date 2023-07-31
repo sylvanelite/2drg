@@ -1,11 +1,14 @@
 {
   "name": "2dRG",
   "scripts": {
-    "test": "",
+    "test": "c8 --reporter=html jasmine",
     "build": "tsc"
   },
   "author": "Sylvan",
   "devDependencies": {
+    "@types/jasmine": "^4.3.5",
+    "c8": "^8.0.1",
+    "jasmine": "^5.1.0"
   },
   "version": "1.0.0"
 }

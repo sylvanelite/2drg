@@ -7,7 +7,7 @@
 		canvas{display:block;image-rendering: pixelated;}
 	</style>
 	<script type="module">
-		import {RbMain} from "./build/rbMain.mjs";
+		import {RbMain} from "./build/lib/rbMain.mjs";
 		const main = new RbMain();
 		window.host=()=>{RbMain.host(main);};
 		window.join=(id)=>{RbMain.join(main,id);};
