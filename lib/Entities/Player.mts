@@ -55,7 +55,6 @@ class Player{
         }
         if (NetplayInput.getPressed(controls,CONTROLS.JUMP)) {
             entity.velocity.y = -2;
-            //Game.gameInstance.jumping = true;//TODO: fix jumping
         }
         entity.velocity.y+=1; 
         if(entity.velocity.y>2){entity.velocity.y=2;}//max fall speed
@@ -65,7 +64,6 @@ class Player{
                 if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)) {
                     entity.position.y += 1;
                 } else {
-                    //Game.gameInstance.jumping = false;//TODO: fix jumping
                     entity.velocity.y = 0;
                 }
             }
@@ -93,7 +91,7 @@ class Player{
                 entity.sprite = PLAYER_SPRITE.STANDING_RIGHT;
             }
         }
-        if(entity.velocity.y==0){//if on ground
+        if(entity.velocity.y==0||entity.velocity.y==1){//if on ground
             if(entity.velocity.x>0){//and moving
                 entity.sprite = PLAYER_SPRITE.MOVING_RIGHT;
             }
@@ -115,7 +113,8 @@ class Player{
                 entity.sprite = PLAYER_SPRITE.JUMPING_RIGHT;
             }
         }
-        if(entity.velocity.y>0){
+        if(entity.velocity.y>1){//NOTE: velocity y==1 can come from just walking
+                                //only change to falling if falling for >1 frame
             if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT||
                 entity.sprite == PLAYER_SPRITE.JUMPING_LEFT||
                 entity.sprite == PLAYER_SPRITE.STANDING_LEFT||
@@ -283,4 +282,4 @@ class Player{
             spr.x,spr.y,spr.w,spr.h,flipX,false);
     }
 }
-export {Player}
+export {Player,PLAYER_SPRITE}//PLAYER_SPRITE is only exported for tests
