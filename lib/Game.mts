@@ -24,6 +24,7 @@ class Game extends NetplayState{
                     hp:e.hp,
                     maxHp:e.maxHp,
                     cooldown:e.cooldown,
+                    secondaryCooldown:e.secondaryCooldown,
                     sprite:e.sprite,
                     spriteFrame:e.spriteFrame,
                     position_x:e.position.x,
@@ -93,6 +94,7 @@ class Game extends NetplayState{
                 ent.hp=e.hp;
                 ent.maxHp=e.maxHp;
                 ent.cooldown=e.cooldown;
+                ent.secondaryCooldown=e.secondaryCooldown;
                 ent.sprite=e.sprite;
                 ent.spriteFrame=e.spriteFrame;
                 ent.position.x=e.position_x;

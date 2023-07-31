@@ -17,6 +17,7 @@ class Entity{
     hp:number;
     maxHp:number;
     cooldown:number;//TODO: other vars, ammo, etc
+    secondaryCooldown:number;
     sprite:number;
     spriteFrame:number;
     position:{x:number,y:number};
@@ -30,6 +31,7 @@ class Entity{
         this.hp=0;
         this.maxHp=100;
         this.cooldown=0;
+        this.secondaryCooldown=0;
         this.sprite=0;
         this.spriteFrame=0;
         this.position={x:0,y:0};
