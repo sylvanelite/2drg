@@ -112,7 +112,7 @@ class Game extends NetplayState{
         this.ctx.imageSmoothingEnabled= false;
         this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
-        this.worldSize = 24;
+        this.worldSize = 12;
         for(let i=0;i<this.worldSize;i+=1){
             for(let j=0;j<this.worldSize;j+=1){
                 const r = new Room();
@@ -192,8 +192,7 @@ class Game extends NetplayState{
             }
         }
         //set up objects
-        
-        this.currentRoom = 500;
+        this.currentRoom = this.worldSize+Math.floor(this.worldSize/2);//start 1/2 down the second row
         const startingRoom  = this.rooms[this.currentRoom];
         for(let i=0;i<playerCount;i+=1){
             const playerEntity = new Entity();//TODO: real init...
