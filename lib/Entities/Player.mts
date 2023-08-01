@@ -22,7 +22,7 @@ class Player{
     static update(room:Room,entity:Entity) {
         const controls =Game.inputs.get(entity.uid);
         let i = 0;
-        const max_h_speed = 2;
+        const max_h_speed = 1;
         entity.velocity.x = 0;
         entity.spriteFrame+=0.2;
         entity.spriteFrame %=2;
@@ -183,10 +183,10 @@ class Player{
                         entity.cooldown = 1;//cooldown 
                         bulletEntity.hp = 1;//damage
                         bulletEntity.cooldown = 20;//bullet lifetime
-                        const spreadAngle = 5/( 180 / Math.PI);//5 degrees in rad
+                        const spreadAngle = 3/( 180 / Math.PI);//5 degrees in rad
                         const spread = PRNG.prng()*spreadAngle-PRNG.prng()*spreadAngle;
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*5;//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*5;//speed
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*(2+PRNG.prng()*3);//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*(2+PRNG.prng()*3);//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
                     }
@@ -194,10 +194,8 @@ class Player{
                         entity.cooldown = 5;//cooldown 
                         bulletEntity.hp = 5;//damage
                         bulletEntity.cooldown = 100;//bullet lifetime
-                        const spreadAngle = 2/( 180 / Math.PI);
-                        const spread = PRNG.prng()*spreadAngle-PRNG.prng()*spreadAngle;
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*10;//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*10;//speed
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
                     }
