@@ -20,7 +20,7 @@ class LocalMain{
     //should we modify RB to accept a non-network instance?
     begin(){
         LocalMain.#game = Main.init(0,1);
-        setInterval(LocalMain.#mainLoop, LocalMain.#game.tickRate*1000);
+        setInterval(LocalMain.#mainLoop, LocalMain.#game.tickRate);
         requestAnimationFrame(LocalMain.#renderLoop);
     };
 

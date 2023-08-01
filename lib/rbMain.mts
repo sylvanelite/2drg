@@ -69,7 +69,7 @@ class RbMain extends NW{
         );
         console.log("Successfully connected to server.. Starting game..");
         //start game render loop
-        this.#rollbackNetcode.start(game.tickRate*1000);
+        this.#rollbackNetcode.start(game.tickRate);
         const animate = () => {
             game.draw();
             requestAnimationFrame(animate);

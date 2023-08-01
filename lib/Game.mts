@@ -124,7 +124,7 @@ class Game extends NetplayState{
     tickRate:number;//time until the next update() is called
     constructor(canvas:HTMLCanvasElement) {
         super();
-        this.tickRate = 30/1000;
+        this.tickRate = 40;//time between ticks, i.e. 1000/this.tickRate = fps
         this.ctx = canvas.getContext("2d");
         this.ctx.imageSmoothingEnabled= false;
         this.inputReader = new KeyboardAndMouseInputReader(canvas);

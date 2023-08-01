@@ -17,7 +17,7 @@ class Enemy{
         let tgtX = entity.position.x;
         let tgtY = entity.position.y;
         for(const pid of room.players){
-            tgtX = room.entities[pid].position.x+Math.floor(entity.size.x/2);
+            tgtX = room.entities[pid].position.x+Math.floor(room.entities[pid].size.x/2);
             tgtY = room.entities[pid].position.y;
         }
         //movement, if overlapping terrain, move slower
