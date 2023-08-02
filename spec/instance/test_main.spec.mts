@@ -18,7 +18,7 @@ describe("test main",function(){
 	it("check init",async function() {
         Game.gameInstance = new Game(canvasMock as any);
         Game.gameInstance.worldSize = 2;//init is slow, get better test perf by dropping world size
-        const [playerId,playerCount] = [0,1];
+        const playerId = 0;
         const playerConfig = new PlayerConfig();
         const missionConfig = new ResourceConfig();
         Game.gameInstance.init(playerId,[playerConfig],missionConfig);
@@ -31,7 +31,7 @@ describe("test serialisation",function(){
 	it("serialise/desertialise",async function() {
         Game.gameInstance = new Game(canvasMock as any);
         Game.gameInstance.worldSize = 2;
-        const [playerId,playerCount] = [0,1];
+        const playerId = 0;
         const playerConfig = new PlayerConfig();
         const missionConfig = new ResourceConfig();
         Game.gameInstance.init(playerId,[playerConfig],missionConfig);
