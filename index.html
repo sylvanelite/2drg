@@ -11,8 +11,8 @@
 		const main = new RbMain();
 		window.host=()=>{RbMain.host(main);};
 		window.join=(id)=>{RbMain.join(main,id);};
-		window.begin=()=>{RbMain.begin(main);};
-		window.readyUp=()=>{RbMain.readyUp(main);};
+		window.begin=(config)=>{RbMain.begin(main,config);};
+		window.readyUp=(config)=>{RbMain.readyUp(main,config);};
 	</script>
 </head>
 <body>

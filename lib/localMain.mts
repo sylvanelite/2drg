@@ -1,5 +1,6 @@
 import { Main } from "./main.mjs";
 import { Game } from "./Game.mjs";
+import { PlayerConfig } from "./Entities/PlayerConfig.mjs";
 
 class LocalMain{
     static #inputs = new Map();
@@ -19,7 +20,9 @@ class LocalMain{
     //TOOD: instead of having this as its own class
     //should we modify RB to accept a non-network instance?
     begin(){
-        LocalMain.#game = Main.init(0,1);
+        const playerConfig = new PlayerConfig();
+        playerConfig.chosenClass = PlayerConfig.CLASSES.DRILLER;
+        LocalMain.#game = Main.init(0,[playerConfig]);
         setInterval(LocalMain.#mainLoop, LocalMain.#game.tickRate);
         requestAnimationFrame(LocalMain.#renderLoop);
     };

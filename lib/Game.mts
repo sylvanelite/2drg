@@ -6,6 +6,7 @@ import { Entity,Collision } from "./Entity.mjs";
 import { Room } from "./Room.mjs";
 import { TERRAIN_WIDTH,TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
 import { ConvChain } from "./ConvChain.mjs";
+import { PlayerConfig } from "./Entities/PlayerConfig.mjs";
 class Game extends NetplayState{
     static gameInstance:Game;
 //TODO: serialise rooms->entities->terrain
@@ -64,6 +65,7 @@ class Game extends NetplayState{
             //playerUid:this.playerUid,
             //worldWidth:this.worldWidth,
             //tickRate:this.tickRate
+            //playerConfig
             RNG_A:PRNG.RNG_A,
             RNG_B:PRNG.RNG_B,
             RNG_C:PRNG.RNG_C,
@@ -122,6 +124,7 @@ class Game extends NetplayState{
     worldSize:number;
     playerUid:number;
     tickRate:number;//time until the next update() is called
+    playerConfig:Map<number,PlayerConfig>;
     constructor(canvas:HTMLCanvasElement) {
         super();
         this.tickRate = 40;//time between ticks, i.e. 1000/this.tickRate = fps
@@ -130,8 +133,9 @@ class Game extends NetplayState{
         this.inputReader = new KeyboardAndMouseInputReader(canvas);
         this.rooms = [];
         this.worldSize = 12;
+        this.playerConfig = new Map();
     }
-    init(playerId:number,playerCount:number){
+    init(playerId:number,players:Array<PlayerConfig>){
         Entity.uid = 0;//reset the ID count so that playerIds are kept in sync
         //note:bindings is a bitmask, should cap at ~32 
         this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
@@ -213,14 +217,18 @@ class Game extends NetplayState{
         //set up objects
         this.currentRoom = this.worldSize+Math.floor(this.worldSize/2);//start 1/2 down the second row
         const startingRoom  = this.rooms[this.currentRoom];
-        for(let i=0;i<playerCount;i+=1){
-            const playerEntity = new Entity();//TODO: real init...
+        //NOTE: players MUST be the first entities created
+        //      RB is assuming that ids start from 0, and the UIDs assigned must therefore also start from 0 
+        for(let i=0;i<players.length;i+=1){
+            const playerEntity = new Entity();
             playerEntity.kind = EntityKind.Player;
             if(playerEntity.uid == playerId){
-                //note: 'if' is not really needed. Assumes that players are the 1st entity 
-                //since playerId will be 0,1,2,3,4...
+                //note: 'if' is not really needed. Could instead write this.playerUid = playerId outside the loop
+                //the 'if' is really only used so that in case the entity is NOT created, 
+                //unit tests can detect this and fail their assert
                 this.playerUid = playerEntity.uid;
             }
+            this.playerConfig.set(playerEntity.uid,players[i]);
             playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
             Room.AddEntity(startingRoom,playerEntity);
         }

@@ -1,9 +1,10 @@
 
-import { NW}from "./netPeer/network.mjs";
+import { NW }from "./netPeer/network.mjs";
 import { NetplayInput } from "./netPeer/netplayInput.mjs";
 import { RollbackNetcode } from "./netPeer/rollback.mjs";
 import { Peer } from "./peer/peerjs.mjs";
-import {Main} from "./main.mjs";
+import { Main } from "./main.mjs";
+import { PlayerConfig } from "./Entities/PlayerConfig.mjs";
 type JoinStatus = "ready"|"joined";
 type MessageKind = "begin"|"telegraph"|"join"|"ready";
 type Message = {
@@ -14,7 +15,8 @@ type Message = {
 
 interface IPlayerNum{
     peerid:string,
-    telegraphPlayerNum:number
+    telegraphPlayerNum:number,
+    config:PlayerConfig
 }
 
 class RbMain extends NW{
@@ -50,12 +52,18 @@ class RbMain extends NW{
 
 
     joined:Map<string,JoinStatus> = new Map();//holds player ID->status mapping
+    playerConfig:Map<string,PlayerConfig> = new Map();//holds intial player config when they join
     #rollbackNetcode: RollbackNetcode;
     constructor(){
         super();
     }
-    onStart(playerCount:number,playerId:number){
-        const game = Main.init(playerId,playerCount);
+    onStart(players:Array<IPlayerNum>,playerId:number){
+        const playerCount = players.length;
+        const configs = [];
+        for(const p of players){
+            configs.push(p.config);
+        }
+        const game = Main.init(playerId,configs);
         this.#rollbackNetcode = new RollbackNetcode(
         game,playerCount,playerId,
         10,
@@ -88,6 +96,7 @@ class RbMain extends NW{
             }
             if(rcvMessage.kind == 'ready'){
                 this.joined.set(rcvMessage.id, "ready");
+                this.playerConfig.set(rcvMessage.id,rcvMessage.data.config);
             }
             //if you're the host, broadcast messages to clients
             if(rcvMessage.kind == "telegraph" ){
@@ -104,7 +113,7 @@ class RbMain extends NW{
                         break;
                     }
                 }
-                this.onStart(players.length,myId);
+                this.onStart(players,myId);
             }
         }
         //finally, handle telegraph message processing
@@ -120,7 +129,7 @@ class RbMain extends NW{
             }
         }
     }
-    static begin(self:RbMain){//TOOD: should only the host be able to start???
+    static begin(self:RbMain,config:PlayerConfig){//TOOD: should only the host be able to start???
         if(self.joined.size<1){
             console.log("not enough remote players",self.joined);
             return;
@@ -135,13 +144,15 @@ class RbMain extends NW{
         const numPlayers = self.joined.size+1;//+1 for self
         const allPlayers = [{//start with self (host)
                 peerid:self.networkId,
-                telegraphPlayerNum:0
+                telegraphPlayerNum:0,
+                config
         }];
         let playerNum = 1;
         for(const [id,status] of self.joined){//add all others
             allPlayers.push({
                 peerid:id,
-                telegraphPlayerNum:playerNum});
+                telegraphPlayerNum:playerNum,
+                config:self.playerConfig.get(id)});
             playerNum+=1;
         }
         
@@ -150,15 +161,13 @@ class RbMain extends NW{
         self.send({
             kind:'begin',data:msg
         });
-        //TODO: num players, need to have your own ID and each client has their own
-        //      update on start with num players
-        //      update onData if host to re-broadcast
-        self.onStart(allPlayers.length,0);
+        self.onStart(allPlayers,0);
     }
-    static readyUp(self:RbMain){
+    static readyUp(self:RbMain,config:PlayerConfig){
         if(!self.isHost){
             self.send({
-                kind:'ready',id:self.networkId
+                kind:'ready',id:self.networkId,
+                data:{config}
             });
         }
     }

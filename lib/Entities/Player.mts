@@ -8,6 +8,7 @@ import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
 import { ImageCache } from "../ImageCache.mjs";
 import { sprites,IMAGE_HEIGHT,IMAGE_WIDTH } from "../sprites.mjs";
+import { PlayerConfig } from "./PlayerConfig.mjs";
 const PLAYER_SPRITE = {
     STANDING_LEFT:0,
     STANDING_RIGHT:1,
@@ -233,50 +234,84 @@ class Player{
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         const image = ImageCache.getImage("./media/sprites.png");
         if (!image.loaded){return;}
-        let spr = sprites.driller_stand1;
+        let spr_stand1,spr_stand2,spr_jet1,spr_jet2,spr_fall1,spr_fall2 = sprites.driller_stand1;
+        const chCl = Game.gameInstance.playerConfig.get(entity.uid)?.chosenClass;
+        if(chCl == PlayerConfig.CLASSES.DRILLER){
+            spr_stand1 = sprites.driller_stand1;
+            spr_stand2 = sprites.driller_stand2;
+            spr_jet1 = sprites.driller_jet1;
+            spr_jet2 = sprites.driller_jet2;
+            spr_fall1 = sprites.driller_fall1;
+            spr_fall2 = sprites.driller_fall2;
+        }
+        if(chCl == PlayerConfig.CLASSES.ENGINEER){
+            spr_stand1 = sprites.engineer_stand1;
+            spr_stand2 = sprites.engineer_stand2;
+            spr_jet1 = sprites.engineer_jet1;
+            spr_jet2 = sprites.engineer_jet2;
+            spr_fall1 = sprites.engineer_fall1;
+            spr_fall2 = sprites.engineer_fall2;
+        }
+        if(chCl == PlayerConfig.CLASSES.SCOUT){
+            spr_stand1 = sprites.scout_stand1;
+            spr_stand2 = sprites.scout_stand2;
+            spr_jet1 = sprites.scout_jet1;
+            spr_jet2 = sprites.scout_jet2;
+            spr_fall1 = sprites.scout_fall1;
+            spr_fall2 = sprites.scout_fall2;
+        }
+        if(chCl == PlayerConfig.CLASSES.GUNNER){
+            spr_stand1 = sprites.gunner_stand1;
+            spr_stand2 = sprites.gunner_stand2;
+            spr_jet1 = sprites.gunner_jet1;
+            spr_jet2 = sprites.gunner_jet2;
+            spr_fall1 = sprites.gunner_fall1;
+            spr_fall2 = sprites.gunner_fall2;
+        }
+        let spr = spr_stand1;
         let flipX =false;
         if(entity.sprite == PLAYER_SPRITE.STANDING_LEFT){
-            spr =sprites.driller_stand1;
+            spr =spr_stand1;
             flipX = true;
         }
         if(entity.sprite == PLAYER_SPRITE.STANDING_RIGHT){
-            spr =sprites.driller_stand1;
+            spr =spr_stand1;
             flipX = false;
         }
         if(entity.sprite == PLAYER_SPRITE.MOVING_LEFT){
             spr = Math.floor(entity.spriteFrame)==0?
-                sprites.driller_stand1:
-                sprites.driller_stand2;
+                spr_stand1:
+                spr_stand2;
             flipX = true;
         }
         if(entity.sprite == PLAYER_SPRITE.MOVING_RIGHT){
             spr = Math.floor(entity.spriteFrame)==0?
-                sprites.driller_stand1:
-                sprites.driller_stand2;
+                spr_stand1:
+                spr_stand2;
             flipX = false;
         }
         if(entity.sprite == PLAYER_SPRITE.JUMPING_LEFT){
             spr = Math.floor(entity.spriteFrame)==0?
-                sprites.driller_jet1:
-                sprites.driller_jet2;
+                spr_jet1:
+                spr_jet2;
             flipX = true;
         }
         if(entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT){
             spr = Math.floor(entity.spriteFrame)==0?
-                sprites.driller_jet1:
-                sprites.driller_jet2;
+                spr_jet1:
+                spr_jet2;
             flipX = false;
         }
         if(entity.sprite == PLAYER_SPRITE.FALLING_LEFT){
             spr = Math.floor(entity.spriteFrame)==0?
-                sprites.driller_fall1:
-                sprites.driller_fall2;
+                spr_fall1:
+                spr_fall2;
             flipX = true;
         }
         if(entity.sprite == PLAYER_SPRITE.FALLING_RIGHT){
             spr = Math.floor(entity.spriteFrame)==0?
-                sprites.driller_fall1:
-                sprites.driller_fall2;
+                spr_fall1:
+                spr_fall2;
             flipX = false;
         }
         ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
