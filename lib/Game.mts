@@ -7,7 +7,7 @@ import { Room } from "./Room.mjs";
 import { TERRAIN_WIDTH,TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
 import { ConvChain } from "./ConvChain.mjs";
 import { PlayerConfig } from "./Config/PlayerConfig.mjs";
-import { ResourceConfig } from "./Config/ResourceConfig.mjs";
+import { ResourceConfig,ResourceLiveCount } from "./Config/ResourceConfig.mjs";
 class Game extends NetplayState{
     static gameInstance:Game;
 //TODO: serialise rooms->entities->terrain
@@ -58,6 +58,8 @@ class Game extends NetplayState{
             rooms.push(rSerial);
             //}
         }
+        const resources = {
+        };
         return {
             currentRoom:this.currentRoom,
             EnityUid:Entity.uid,
@@ -67,6 +69,8 @@ class Game extends NetplayState{
             //worldWidth:this.worldWidth,
             //tickRate:this.tickRate
             //playerConfig
+            //missionConfig
+            resources,
             RNG_A:PRNG.RNG_A,
             RNG_B:PRNG.RNG_B,
             RNG_C:PRNG.RNG_C,
@@ -112,6 +116,13 @@ class Game extends NetplayState{
                 tgt.terrain.terrain[i] = r.terr[i];//assumes w/h/length are correct
             }
         }
+        this.resourceLiveCount.bismore = value.bismore;
+        this.resourceLiveCount.croppa = value.croppa;
+        this.resourceLiveCount.nitra = value.nitra;
+        this.resourceLiveCount.gold = value.gold; 
+        this.resourceLiveCount.egg = value.egg;
+        this.resourceLiveCount.aquarq = value.aquarq;
+        this.resourceLiveCount.fossil = value.fossil;
         PRNG.RNG_A = value.RNG_A;
         PRNG.RNG_B = value.RNG_B;
         PRNG.RNG_C = value.RNG_C;
@@ -127,6 +138,7 @@ class Game extends NetplayState{
     tickRate:number;//time until the next update() is called
     playerConfig:Map<number,PlayerConfig>;
     missionConfig:ResourceConfig;
+    resourceLiveCount:ResourceLiveCount;
     constructor(canvas:HTMLCanvasElement) {
         super();
         this.tickRate = 40;//time between ticks, i.e. 1000/this.tickRate = fps
@@ -137,6 +149,7 @@ class Game extends NetplayState{
         this.worldSize = 12;
         this.playerConfig = new Map();
         this.missionConfig = new ResourceConfig();
+        this.resourceLiveCount = new ResourceLiveCount();
     }
     init(playerId:number,players:Array<PlayerConfig>,mission:ResourceConfig){
         Entity.uid = 0;//reset the ID count so that playerIds are kept in sync
@@ -152,8 +165,8 @@ class Game extends NetplayState{
         this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
         this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
         //set up objectives
-        this.missionConfig.chosenPrimary = mission.chosenPrimary;
-        this.missionConfig.chosenSecondary = mission.chosenSecondary;
+        this.missionConfig = mission;
+        PRNG.prng(mission.seed);
         //set up rooms
         for(let i=0;i<this.worldSize;i+=1){
             for(let j=0;j<this.worldSize;j+=1){

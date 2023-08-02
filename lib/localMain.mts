@@ -24,8 +24,13 @@ class LocalMain{
         const playerConfig = new PlayerConfig();
         playerConfig.chosenClass = PlayerConfig.CLASSES.DRILLER;
         const missionConfig = new ResourceConfig();
-        missionConfig.chosenPrimary = ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION;
         missionConfig.chosenSecondary = ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL;
+        missionConfig.seed = Math.floor(Math.random()*10000);
+        const missionKinds = [
+            ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION,
+            ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT,
+            ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION];
+        missionConfig.chosenPrimary = missionKinds[Math.floor(Math.random()*missionKinds.length)];
         LocalMain.#game = Main.init(0,[playerConfig],missionConfig);
         setInterval(LocalMain.#mainLoop, LocalMain.#game.tickRate);
         requestAnimationFrame(LocalMain.#renderLoop);
