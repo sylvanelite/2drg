@@ -126,8 +126,8 @@ class UI{
         for(let i=0;i<room.maxEntities;i+=1){
             const ent = room.entities[i];
             if(ent.uid ==Game.gameInstance.playerUid){
-                playerX=ent.position.x;
-                playerY=ent.position.y;
+                playerX=ent.position.x+room.x*room.terrain.width;
+                playerY=ent.position.y+room.y*room.terrain.height;
                 break;
             }
         }
