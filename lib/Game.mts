@@ -6,7 +6,8 @@ import { Entity,Collision } from "./Entity.mjs";
 import { Room } from "./Room.mjs";
 import { TERRAIN_WIDTH,TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
 import { ConvChain } from "./ConvChain.mjs";
-import { PlayerConfig } from "./Entities/PlayerConfig.mjs";
+import { PlayerConfig } from "./Config/PlayerConfig.mjs";
+import { ResourceConfig } from "./Config/ResourceConfig.mjs";
 class Game extends NetplayState{
     static gameInstance:Game;
 //TODO: serialise rooms->entities->terrain
@@ -125,6 +126,7 @@ class Game extends NetplayState{
     playerUid:number;
     tickRate:number;//time until the next update() is called
     playerConfig:Map<number,PlayerConfig>;
+    missionConfig:ResourceConfig;
     constructor(canvas:HTMLCanvasElement) {
         super();
         this.tickRate = 40;//time between ticks, i.e. 1000/this.tickRate = fps
@@ -134,8 +136,9 @@ class Game extends NetplayState{
         this.rooms = [];
         this.worldSize = 12;
         this.playerConfig = new Map();
+        this.missionConfig = new ResourceConfig();
     }
-    init(playerId:number,players:Array<PlayerConfig>){
+    init(playerId:number,players:Array<PlayerConfig>,mission:ResourceConfig){
         Entity.uid = 0;//reset the ID count so that playerIds are kept in sync
         //note:bindings is a bitmask, should cap at ~32 
         this.inputReader.bindings.set('ArrowRight', CONTROLS.RIGHT);
@@ -148,6 +151,9 @@ class Game extends NetplayState{
         this.inputReader.bindings.set('mouse_0', CONTROLS.SHOOT);
         this.inputReader.bindings.set('ArrowDown', CONTROLS.MINE);
         this.inputReader.bindings.set('KeyS', CONTROLS.MINE);
+        //set up objectives
+        this.missionConfig.chosenPrimary = mission.chosenPrimary;
+        this.missionConfig.chosenSecondary = mission.chosenSecondary;
         //set up rooms
         for(let i=0;i<this.worldSize;i+=1){
             for(let j=0;j<this.worldSize;j+=1){

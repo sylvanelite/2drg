@@ -4,7 +4,8 @@ import { NetplayInput } from "./netPeer/netplayInput.mjs";
 import { RollbackNetcode } from "./netPeer/rollback.mjs";
 import { Peer } from "./peer/peerjs.mjs";
 import { Main } from "./main.mjs";
-import { PlayerConfig } from "./Entities/PlayerConfig.mjs";
+import { PlayerConfig } from "./Config/PlayerConfig.mjs";
+import { ResourceConfig } from "./Config/ResourceConfig.mjs";
 type JoinStatus = "ready"|"joined";
 type MessageKind = "begin"|"telegraph"|"join"|"ready";
 type Message = {
@@ -57,13 +58,13 @@ class RbMain extends NW{
     constructor(){
         super();
     }
-    onStart(players:Array<IPlayerNum>,playerId:number){
+    onStart(players:Array<IPlayerNum>,playerId:number,mission:ResourceConfig){
         const playerCount = players.length;
         const configs = [];
         for(const p of players){
             configs.push(p.config);
         }
-        const game = Main.init(playerId,configs);
+        const game = Main.init(playerId,configs,mission);
         this.#rollbackNetcode = new RollbackNetcode(
         game,playerCount,playerId,
         10,
@@ -113,7 +114,7 @@ class RbMain extends NW{
                         break;
                     }
                 }
-                this.onStart(players,myId);
+                this.onStart(players,myId,rcvMessage.data.mission);
             }
         }
         //finally, handle telegraph message processing
@@ -157,11 +158,12 @@ class RbMain extends NW{
         }
         
         //--send initial telegraph status to all clients
-        const msg = {allPlayers,numPlayers};
+        const mission = new ResourceConfig();
+        const msg = {allPlayers,numPlayers,mission};
         self.send({
             kind:'begin',data:msg
         });
-        self.onStart(allPlayers,0);
+        self.onStart(allPlayers,0,mission);
     }
     static readyUp(self:RbMain,config:PlayerConfig){
         if(!self.isHost){

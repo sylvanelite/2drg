@@ -1,6 +1,7 @@
 import { Main } from "./main.mjs";
 import { Game } from "./Game.mjs";
-import { PlayerConfig } from "./Entities/PlayerConfig.mjs";
+import { PlayerConfig } from "./Config/PlayerConfig.mjs";
+import { ResourceConfig } from "./Config/ResourceConfig.mjs";
 
 class LocalMain{
     static #inputs = new Map();
@@ -22,7 +23,10 @@ class LocalMain{
     begin(){
         const playerConfig = new PlayerConfig();
         playerConfig.chosenClass = PlayerConfig.CLASSES.DRILLER;
-        LocalMain.#game = Main.init(0,[playerConfig]);
+        const missionConfig = new ResourceConfig();
+        missionConfig.chosenPrimary = ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION;
+        missionConfig.chosenSecondary = ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL;
+        LocalMain.#game = Main.init(0,[playerConfig],missionConfig);
         setInterval(LocalMain.#mainLoop, LocalMain.#game.tickRate);
         requestAnimationFrame(LocalMain.#renderLoop);
     };

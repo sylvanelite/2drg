@@ -1,5 +1,5 @@
 
-//not an entity class, used to set up players on game init (e.g. apply chosen classes, etc)
+//global data attached to each player upon join
 class PlayerConfig{
     static CLASSES={
         DRILLER:0,

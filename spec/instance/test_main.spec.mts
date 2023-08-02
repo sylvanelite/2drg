@@ -1,6 +1,7 @@
 import { Game } from "../../lib/Game.mjs";
 import { Room } from "../../lib/Room.mjs";
-import { PlayerConfig } from "../../lib/Entities/PlayerConfig.mjs";
+import { PlayerConfig } from "../../lib/Config/PlayerConfig.mjs";
+import { ResourceConfig } from "../../lib/Config/ResourceConfig.mjs";
 
 const canvasMock = {
     getContext:()=>{
@@ -19,7 +20,8 @@ describe("test main",function(){
         Game.gameInstance.worldSize = 2;//init is slow, get better test perf by dropping world size
         const [playerId,playerCount] = [0,1];
         const playerConfig = new PlayerConfig();
-        Game.gameInstance.init(playerId,[playerConfig]);
+        const missionConfig = new ResourceConfig();
+        Game.gameInstance.init(playerId,[playerConfig],missionConfig);
         expect(Game.gameInstance.rooms.length).toBe(Game.gameInstance.worldSize*Game.gameInstance.worldSize);
         expect(Game.gameInstance.playerUid).toBe(playerId);
     });
@@ -31,7 +33,8 @@ describe("test serialisation",function(){
         Game.gameInstance.worldSize = 2;
         const [playerId,playerCount] = [0,1];
         const playerConfig = new PlayerConfig();
-        Game.gameInstance.init(playerId,[playerConfig]);
+        const missionConfig = new ResourceConfig();
+        Game.gameInstance.init(playerId,[playerConfig],missionConfig);
         const serial = Game.gameInstance.serialize();
         //count how many entities are spawned into each room
         const entityCounts = Array(Game.gameInstance.rooms.length);

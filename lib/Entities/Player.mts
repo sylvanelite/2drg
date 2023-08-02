@@ -8,7 +8,7 @@ import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
 import { ImageCache } from "../ImageCache.mjs";
 import { sprites,IMAGE_HEIGHT,IMAGE_WIDTH } from "../sprites.mjs";
-import { PlayerConfig } from "./PlayerConfig.mjs";
+import { PlayerConfig } from "../Config/PlayerConfig.mjs";
 const PLAYER_SPRITE = {
     STANDING_LEFT:0,
     STANDING_RIGHT:1,
