@@ -1,7 +1,9 @@
 import { EntityKind } from "./types.mjs";
 import { Entity } from "./Entity.mjs";
-import {Terrain} from "./Terrain.mjs";
+import { Terrain } from "./Terrain.mjs";
 import { Game } from "./Game.mjs";
+import { FONT_WIDTH,FONT_HEIGHT,LETTER_H,LETTER_W,font } from "./sprites.mjs";
+import { ImageCache } from "./ImageCache.mjs";
 class Room{
     idx:number;
     x:number;
@@ -95,7 +97,28 @@ class Room{
         if(room.locked_R||room.x==Game.gameInstance.worldSize-1){
             ctx.fillRect(room.terrain.width-2,0,2,room.terrain.height);
         }
+        UI.draw(ctx,room);
     }
 
+}
+
+class UI{
+    static draw(ctx:CanvasRenderingContext2D,room:Room){
+        //draws room-based UI elements (i.e. global UI elements)
+        //minimap
+        //objectives
+        UI.drawText(ctx,"HELLO world!",13,130);
+    }
+    static drawText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number){
+        //FONT_WIDTH,FONT_HEIGHT,font
+        const image = ImageCache.getImage("./media/font-pixel-simplicity_grey.png");
+        if (!image.loaded){return;}
+        for(let i=0;i<text.length;i+=1){
+            const char = text.charAt(i);
+            const fontLett = (font as any)[char];
+            ImageCache.drawTile(ctx,image,x+i*LETTER_W,y,fontLett.x,fontLett.y,LETTER_W,LETTER_H,false,false);
+        }
+    }
+    
 }
 export {Room}
