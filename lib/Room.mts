@@ -1,4 +1,4 @@
-import { EntityKind } from "./types.mjs";
+import { EntityKind, xyToIdx } from "./types.mjs";
 import { Entity } from "./Entity.mjs";
 import { Terrain } from "./Terrain.mjs";
 import { Game } from "./Game.mjs";
@@ -109,41 +109,89 @@ class UI{
         //      72 px from bottom
         //draws room-based UI elements (i.e. global UI elements)
         //minimap
+        UI.#drawMinimap(ctx,room);
         //objectives
+        UI.#drawOverview(ctx,room);
+    }
+    static #drawMinimap(ctx:CanvasRenderingContext2D,room:Room){
+        //render a 64x128 stripe of the global map, scaled to 2x2 pixels (32x64 operations)
+        //center on the player
+        
+        //try render 3x3 room preview of world, noting that more heigh is visible
+        
+        //this gives a scale factor of 12 ==((256*3)/64)
+        //start at playerX,Y
+        let playerX=0;//TODO player coords
+        let playerY=0;
+        for(let i=0;i<room.maxEntities;i+=1){
+            const ent = room.entities[i];
+            if(ent.uid ==Game.gameInstance.playerUid){
+                playerX=ent.position.x;
+                playerY=ent.position.y;
+                break;
+            }
+        }
+        const saleFactor = 12;
+        ctx.fillStyle="#FFFFFF";
+        for(let x=-16;x<=16;x+=1){
+            for(let y=-32;y<=32;y+=1){
+                const worldX = playerX+x*saleFactor;
+                const worldY = playerY+y*saleFactor;
+                //calculate the room and sample terrain from that world position
+                if(worldX>=0&&worldX<room.terrain.width*Game.gameInstance.worldSize &&
+                    worldY>=0&&worldY<room.terrain.height*Game.gameInstance.worldSize){
+                        const roomX = Math.floor(worldX/room.terrain.width);
+                        const roomY = Math.floor(worldY/room.terrain.height);
+                        const roomIdx = xyToIdx(roomX,roomY,Game.gameInstance.worldSize);//which room the point is in...
+                        const worldRoom = Game.gameInstance.rooms[roomIdx];
+                        //sample the point from the room
+                        const pointX =worldX-worldRoom.x*room.terrain.width;
+                        const pointY =worldY-worldRoom.y*room.terrain.height;
+                        const filled = Terrain.getBit(pointX,pointY,worldRoom.terrain);
+                        if(filled){//draw
+                            ctx.fillRect(256+(x+16)*2,0+(y+32)*2,2,2);
+                        }
+                }
+            }
+        }
+
+    }
+
+    static #drawOverview(ctx:CanvasRenderingContext2D,room:Room){
         const objectiveX = room.terrain.width;
         let objectiveY = 128;
-        UI.drawText(ctx,"MISSION:",objectiveX,objectiveY);
+        UI.drawText(ctx,"-MISSION-",objectiveX,objectiveY);
         objectiveY+=LETTER_H;
         if(Game.gameInstance.missionConfig.chosenPrimary == ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT){
             const objectiveStatus = Game.gameInstance.resourceLiveCount.egg+"/"+Game.gameInstance.missionConfig.goalPrimary;
             UI.drawText(ctx,"Egg Hunt:",objectiveX,objectiveY);
             objectiveY+=LETTER_H;
-            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+            UI.drawText(ctx,"    "+objectiveStatus,objectiveX,objectiveY);
         }
         if(Game.gameInstance.missionConfig.chosenPrimary == ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION){
             const objectiveStatus = Game.gameInstance.resourceLiveCount.bismore+"/"+Game.gameInstance.missionConfig.goalPrimary;
             UI.drawText(ctx,"Mining:",objectiveX,objectiveY);
             objectiveY+=LETTER_H;
-            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+            UI.drawText(ctx,"    "+objectiveStatus,objectiveX,objectiveY);
         }
         if(Game.gameInstance.missionConfig.chosenPrimary == ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION){
             const objectiveStatus = Game.gameInstance.resourceLiveCount.aquarq+"/"+Game.gameInstance.missionConfig.goalPrimary;
             UI.drawText(ctx,"Extract:",objectiveX,objectiveY);
             objectiveY+=LETTER_H;
-            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+            UI.drawText(ctx,"    "+objectiveStatus,objectiveX,objectiveY);
         }
         objectiveY+=LETTER_H;
         if(Game.gameInstance.missionConfig.chosenSecondary == ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL){
             const objectiveStatus = Game.gameInstance.resourceLiveCount.fossil+"/"+Game.gameInstance.missionConfig.goalSecondary;
             UI.drawText(ctx,"Fossil:",objectiveX,objectiveY);
             objectiveY+=LETTER_H;
-            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+            UI.drawText(ctx,"    "+objectiveStatus,objectiveX,objectiveY);
         }
         objectiveY+=LETTER_H;
         UI.drawText(ctx,"Gold: "+ Game.gameInstance.resourceLiveCount.gold,objectiveX,objectiveY);
+
     }
     static drawText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number){
-        //FONT_WIDTH,FONT_HEIGHT,font
         const image = ImageCache.getImage("./media/font-pixel-simplicity_grey.png");
         if (!image.loaded){return;}
         for(let i=0;i<text.length;i+=1){
