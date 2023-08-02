@@ -117,24 +117,24 @@ class UI{
         //render a 64x128 stripe of the global map, scaled to 2x2 pixels (32x64 operations)
         //center on the player
         
-        //try render 3x3 room preview of world, noting that more heigh is visible
+        //try render 3x3 room preview of world, noting that more height is visible
         
         //this gives a scale factor of 12 ==((256*3)/64)
         //start at playerX,Y
+        const saleFactor = 6;//scale factor of 6 gives 1 px squares, 12 would need 2 px squares and 1/2 x,y
         let playerX=0;//TODO player coords
         let playerY=0;
         for(let i=0;i<room.maxEntities;i+=1){
             const ent = room.entities[i];
             if(ent.uid ==Game.gameInstance.playerUid){
-                playerX=ent.position.x+room.x*room.terrain.width;
-                playerY=ent.position.y+room.y*room.terrain.height;
+                playerX=Math.floor(ent.position.x/saleFactor)*saleFactor+room.x*room.terrain.width;
+                playerY=Math.floor(ent.position.y/saleFactor)*saleFactor+room.y*room.terrain.height;
                 break;
             }
         }
-        const saleFactor = 12;
         ctx.fillStyle="#FFFFFF";
-        for(let x=-16;x<=16;x+=1){
-            for(let y=-32;y<=32;y+=1){
+        for(let x=-32;x<=32;x+=1){
+            for(let y=-64;y<=64;y+=1){
                 const worldX = playerX+x*saleFactor;
                 const worldY = playerY+y*saleFactor;
                 //calculate the room and sample terrain from that world position
@@ -145,11 +145,13 @@ class UI{
                         const roomIdx = xyToIdx(roomX,roomY,Game.gameInstance.worldSize);//which room the point is in...
                         const worldRoom = Game.gameInstance.rooms[roomIdx];
                         //sample the point from the room
-                        const pointX =worldX-worldRoom.x*room.terrain.width;
-                        const pointY =worldY-worldRoom.y*room.terrain.height;
+                        let pointX =worldX-worldRoom.x*room.terrain.width;
+                        let pointY =worldY-worldRoom.y*room.terrain.height;
+                        if(pointX<=1){pointX=1;}
+                        if(pointY<=1){pointY=1;}
                         const filled = Terrain.getBit(pointX,pointY,worldRoom.terrain);
                         if(filled){//draw
-                            ctx.fillRect(256+(x+16)*2,0+(y+32)*2,2,2);
+                            ctx.fillRect(256+(x+32)*1,0+(y+64)*1,1,1);
                         }
                 }
             }
