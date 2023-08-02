@@ -12,10 +12,14 @@ class ResourceConfig{
     chosenPrimary:number;
     chosenSecondary:number;
     seed:number;
+    goalPrimary:number;
+    goalSecondary:number;
     constructor(){
         this.chosenPrimary= ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION;
         this.chosenSecondary= ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL;
         this.seed=42;
+        this.goalPrimary=4;
+        this.goalSecondary=10;
     }
 }
 class ResourceLiveCount{

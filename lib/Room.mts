@@ -4,6 +4,7 @@ import { Terrain } from "./Terrain.mjs";
 import { Game } from "./Game.mjs";
 import { FONT_WIDTH,FONT_HEIGHT,LETTER_H,LETTER_W,font } from "./sprites.mjs";
 import { ImageCache } from "./ImageCache.mjs";
+import { ResourceConfig } from "./Config/ResourceConfig.mjs";
 class Room{
     idx:number;
     x:number;
@@ -104,10 +105,42 @@ class Room{
 
 class UI{
     static draw(ctx:CanvasRenderingContext2D,room:Room){
+        //have: 64 px from right 
+        //      72 px from bottom
         //draws room-based UI elements (i.e. global UI elements)
         //minimap
         //objectives
-        UI.drawText(ctx,"HELLO world!",13,130);
+        const objectiveX = room.terrain.width;
+        let objectiveY = 128;
+        UI.drawText(ctx,"MISSION:",objectiveX,objectiveY);
+        objectiveY+=LETTER_H;
+        if(Game.gameInstance.missionConfig.chosenPrimary == ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT){
+            const objectiveStatus = Game.gameInstance.resourceLiveCount.egg+"/"+Game.gameInstance.missionConfig.goalPrimary;
+            UI.drawText(ctx,"Egg Hunt:",objectiveX,objectiveY);
+            objectiveY+=LETTER_H;
+            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+        }
+        if(Game.gameInstance.missionConfig.chosenPrimary == ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION){
+            const objectiveStatus = Game.gameInstance.resourceLiveCount.bismore+"/"+Game.gameInstance.missionConfig.goalPrimary;
+            UI.drawText(ctx,"Mining:",objectiveX,objectiveY);
+            objectiveY+=LETTER_H;
+            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+        }
+        if(Game.gameInstance.missionConfig.chosenPrimary == ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION){
+            const objectiveStatus = Game.gameInstance.resourceLiveCount.aquarq+"/"+Game.gameInstance.missionConfig.goalPrimary;
+            UI.drawText(ctx,"Extract:",objectiveX,objectiveY);
+            objectiveY+=LETTER_H;
+            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+        }
+        objectiveY+=LETTER_H;
+        if(Game.gameInstance.missionConfig.chosenSecondary == ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL){
+            const objectiveStatus = Game.gameInstance.resourceLiveCount.fossil+"/"+Game.gameInstance.missionConfig.goalSecondary;
+            UI.drawText(ctx,"Fossil:",objectiveX,objectiveY);
+            objectiveY+=LETTER_H;
+            UI.drawText(ctx,"     "+objectiveStatus,objectiveX,objectiveY);
+        }
+        objectiveY+=LETTER_H;
+        UI.drawText(ctx,"Gold: "+ Game.gameInstance.resourceLiveCount.gold,objectiveX,objectiveY);
     }
     static drawText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number){
         //FONT_WIDTH,FONT_HEIGHT,font
