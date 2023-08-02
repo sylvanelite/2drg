@@ -1,5 +1,6 @@
 import { Room } from "../../lib/Room.mjs";
 import { Entity } from "../../lib/Entity.mjs";
+import { EntityKind } from "../../lib/types.mjs";
 
 const assertRoomEntities = (room:Room)=>{
     //assert room max entities is not larger than the backing array
@@ -103,3 +104,37 @@ describe("test room",function(){
     });
 });
 
+
+describe("test playerIds",function(){
+    it("move entities",async function() {
+        const roomA = new Room();
+        const roomB = new Room();
+        const AIds = new Set<number>();
+        const BIds = new Set<number>();
+        for(let i=0;i<100;i+=1){
+            const e = new Entity();
+            e.kind = EntityKind.Player;
+            Room.AddEntity(roomA,e);
+            if(i>=50){
+                Room.MoveEntity(roomA,roomB,e);
+                BIds.add(e.roomId);
+            }else{
+                AIds.add(e.roomId);
+            }
+        }
+        expect(roomA.maxEntities).toBe(50);
+        expect(roomB.maxEntities).toBe(50);
+        assertRoomEntities(roomA);
+        assertRoomEntities(roomB);
+        //assert that the player IDS have been correctly updated from one room to the other
+        expect(AIds.size).toBe(roomA.players.size);
+        expect(BIds.size).toBe(roomB.players.size);
+        for(const id of roomA.players){
+            expect(AIds.has(id)).toBe(true);
+        }
+        for(const id of roomB.players){
+            expect(BIds.has(id)).toBe(true);
+        }
+    });
+    
+});

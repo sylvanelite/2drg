@@ -30,6 +30,7 @@ class Room{
         //then can take the original entity and put it into another room
         const entRemover = new Entity();
         entRemover.roomId = entity.roomId;
+        entRemover.kind = entity.kind;
         startRoom.entities[entity.roomId] = entRemover;
         Room.RemoveEntity(startRoom,entRemover);
         Room.AddEntity(endRoom,entity);
