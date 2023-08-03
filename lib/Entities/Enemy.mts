@@ -1,6 +1,6 @@
 
-import { idxToXy,CONTROLS,PRNG,EuqippedKind } from "../types.mjs";
-import { Entity } from "../Entity.mjs";
+import { idxToXy,CONTROLS,PRNG,EuqippedKind, EntityKind } from "../types.mjs";
+import { Collision, Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 class Enemy{
@@ -9,9 +9,24 @@ class Enemy{
         if(entity.hp<1){
             Room.RemoveEntity(room,entity);
         }
-        if(entity.cooldown==0){
-            //TODO: cooldown==0, do attack
-            entity.cooldown+=30;//TODO: add a random amount
+        entity.cooldown-=1;
+        if(entity.cooldown<=0){//attack speed
+            //add random amount so enemeies that are stacked have variance
+            entity.cooldown+=6+Math.floor(PRNG.prng()*3);
+            let attack = 5;
+            if(entity.euqipped = EuqippedKind.ENEMY_GRUNT){
+                attack=15;
+            }
+            if(entity.euqipped = EuqippedKind.ENEMY_WINGED){
+                attack=10;
+            }
+            //deal damage to players
+            Collision.checkCollisions(room,entity,(collisionId:number)=>{
+                const ent = room.entities[collisionId];
+                if(ent.kind == EntityKind.Player){
+                    ent.hp-=attack;
+                }
+            });
         }
         //update AI
         let tgtX = entity.position.x;
@@ -64,6 +79,10 @@ class Enemy{
             ctx.fillStyle = "#54D7FF";
         }
         ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
+        if(entity.cooldown<=1){//attack
+            ctx.fillStyle = "#FF00FF";
+            ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
+        }
     }
 }
 export {Enemy}
