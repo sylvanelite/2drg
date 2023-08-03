@@ -143,22 +143,42 @@ const sprites = {
         x:2*8,y:13*8,
         w:8,h:8
     },
-    player1:{
+    player_driller:{
         x:24*0,y:14*8,
         w:24,h:50
     },
-    player2:{
+    player_gunner:{
         x:24*1,y:14*8,
         w:24,h:50
     },
-    player3:{
+    player_engineer:{
         x:24*2,y:14*8,
         w:24,h:50
     },
-    player4:{
+    player_scout:{
         x:24*3,y:14*8,
         w:24,h:50
-    }
+    },
+    player_bg:{
+        x:0,y:162,
+        w:64,h:50
+    },
+    player1:{
+        x:24*0,y:212,
+        w:24,h:13
+    },
+    player2:{
+        x:24*1,y:212,
+        w:24,h:13
+    },
+    player3:{
+        x:24*2,y:212,
+        w:24,h:13
+    },
+    player4:{
+        x:24*3,y:212,
+        w:24,h:13
+    },
 };
 
 const FONT_WIDTH = 128;

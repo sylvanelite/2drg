@@ -264,6 +264,7 @@ class Game extends NetplayState{
         //      RB is assuming that ids start from 0, and the UIDs assigned must therefore also start from 0 
         for(let i=0;i<players.length;i+=1){
             const playerEntity = new Entity();
+            playerEntity.hp = playerEntity.maxHp;
             playerEntity.kind = EntityKind.Player;
             if(playerEntity.uid == playerId){
                 //note: 'if' is not really needed. Could instead write this.playerUid = playerId outside the loop
