@@ -2,7 +2,7 @@
 
 import { NetplayInput } from "../netPeer/netplayInput.mjs";
 import { xyToIdx,CONTROLS,EntityKind,PRNG,EuqippedKind } from "../types.mjs";
-import { Entity } from "../Entity.mjs";
+import { Collision, Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
 import { Game } from '../Game.mjs'
@@ -242,6 +242,28 @@ class Player{
         }
 
     }
+    static #updateRevive(room:Room,entity:Entity){
+        if(entity.hp<=0){return;}//can't revive someone if you're downed
+        //NOTE: review timer doesn't reset if you leave...
+        const controls =Game.inputs.get(entity.uid);
+        //see if you are on top of a downed player, and try and revive them
+        Collision.checkCollisions(room,entity,(collisionId:number)=>{
+            const ent = room.entities[collisionId];
+            if(ent.kind == EntityKind.Player&&ent.uid!=entity.uid&&ent.hp<=0){
+                if(controls&&NetplayInput.getPressed(controls,CONTROLS.MINE)){
+                    const cfg = Game.gameInstance.playerLiveCount.get(ent.uid);
+                    if(cfg){
+                        cfg.reviveCount+=1;
+                        if(cfg.reviveCount==30){//takes a certain number of tries to revive
+                            cfg.reviveCount=0;
+                            ent.hp=33;
+                        }
+                    }
+                }
+                
+            }
+        });
+    }
     static update(room:Room,entity:Entity) {
         entity.velocity.x = 0;
         entity.spriteFrame+=0.2;
@@ -253,6 +275,7 @@ class Player{
         if(!didMove){
             Player.#updateShoot(room,entity);
             Player.#updateMine(room,entity);
+            Player.#updateRevive(room,entity);
         }
 
     }

@@ -73,7 +73,8 @@ class Game extends NetplayState{
             players.push({
                 uid,
                 roomId :player.roomId,
-                roomIdx:player.roomIdx
+                roomIdx:player.roomIdx,
+                reviveCount:player.reviveCount
             });
         }
         return {
@@ -144,6 +145,7 @@ class Game extends NetplayState{
             const cfg = this.playerLiveCount.get(p.uid);
             cfg.roomId = p.roomId;
             cfg.roomIdx= p.roomIdx;
+            cfg.reviveCount= p.reviveCount;
         }
         PRNG.RNG_A = value.RNG_A;
         PRNG.RNG_B = value.RNG_B;
