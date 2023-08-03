@@ -65,11 +65,13 @@ class UI{
             const pEnt = pRoom.entities[p.roomId];
             const px=Math.floor(pEnt.position.x/saleFactor)*saleFactor+pRoom.x*terrainWidth;
             const py=Math.floor(pEnt.position.y/saleFactor)*saleFactor+pRoom.y*terrainHeight;
-            const hDist = Math.floor((playerX-px)/saleFactor);
-            const vDist = Math.floor((playerY-py)/saleFactor);
-            if(Math.abs(hDist)>32||Math.abs(vDist)>64){
-                continue;//other playr too far away, don't draw
-            }
+            let hDist = Math.floor((playerX-px)/saleFactor);
+            let vDist = Math.floor((playerY-py)/saleFactor);
+            //if they are too far away, draw on edge of minimap
+            if(hDist<-32){hDist=-30;}
+            if(hDist>32){hDist=30;}
+            if(vDist<-64){vDist=-62;}
+            if(vDist>64){vDist=62;}
             const chCl = Game.gameInstance.playerConfig.get(uid)?.chosenClass;
             if(chCl==PlayerConfig.CLASSES.DRILLER){//yellow
                 ctx.fillStyle = "#FFFF00";
