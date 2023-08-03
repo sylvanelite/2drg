@@ -138,31 +138,33 @@ class Player{
         }
         //move between rooms, going off one side means going onto another
         const buffer = 3;
+        let didMove = false;//don't shoot on the same frame as moving between rooms
+                            //update() holds a ref to this room, so move would add to the wrong room
         if(entity.position.x<0 && room.x>0 && !room.locked_L){
             const idx = xyToIdx(room.x-1,room.y,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
-            Room.MoveEntity(room,targetRoom,entity);
+            Room.MoveEntity(room,targetRoom,entity);didMove=true;
             entity.position.x=room.terrain.width-entity.size.x-buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
         if(entity.position.x+entity.size.x > room.terrain.width&& room.x<Game.gameInstance.worldSize-1 && !room.locked_R){
             const idx = xyToIdx(room.x+1,room.y,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
-            Room.MoveEntity(room,targetRoom,entity);
+            Room.MoveEntity(room,targetRoom,entity);didMove=true;
             entity.position.x=buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
         if(entity.position.y<0 && room.y>0 && !room.locked_U){
             const idx = xyToIdx(room.x,room.y-1,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
-            Room.MoveEntity(room,targetRoom,entity);
+            Room.MoveEntity(room,targetRoom,entity);didMove=true;
             entity.position.y=room.terrain.height-entity.size.y-buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
         if(entity.position.y+entity.size.y > room.terrain.height&& room.y<Game.gameInstance.worldSize-1 && !room.locked_D){
             const idx = xyToIdx(room.x,room.y+1,Game.gameInstance.worldSize);
             const targetRoom = Game.gameInstance.rooms[idx];
-            Room.MoveEntity(room,targetRoom,entity);
+            Room.MoveEntity(room,targetRoom,entity);didMove=true;
             entity.position.y =buffer;
             if(entity.uid==Game.gameInstance.playerUid){ Game.gameInstance.currentRoom = idx; }
         }
@@ -175,7 +177,7 @@ class Player{
         if(entity.cooldown>0){//canshoot
             entity.cooldown-=1;
         }
-        if (entity.hp>0&&controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
+        if (!didMove&&entity.hp>0&&controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
             if(entity.cooldown==0){//canshoot
                 const mousePos =controls.mousePosition;
                 const bulletEntity = new Entity();//TODO: real init...
@@ -223,7 +225,7 @@ class Player{
         if(entity.secondaryCooldown>0){
             entity.secondaryCooldown-=1;
         }
-        if (entity.hp>0&&entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+        if (!didMove&&entity.hp>0&&entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
             entity.secondaryCooldown=10;
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
