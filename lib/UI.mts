@@ -1,6 +1,6 @@
 import { EntityKind, EuqippedKind, xyToIdx } from "./types.mjs";
 import { Entity } from "./Entity.mjs";
-import { Terrain } from "./Terrain.mjs";
+import { TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
 import { Game } from "./Game.mjs";
 import { sprites,LETTER_H,LETTER_W,font } from "./sprites.mjs";
 import { ImageCache } from "./ImageCache.mjs";
@@ -172,12 +172,12 @@ class UI{
         //player number
         //entity stats
         const left = entity.uid*sprites.player_bg.w;
-        const top = ctx.canvas.height-sprites.player_bg.h;
+        const top = TERRAIN_HEIGHT;
         ImageCache.drawTile(ctx,image,left,top,
             sprites.player_bg.x,sprites.player_bg.y,sprites.player_bg.w,sprites.player_bg.h,false,false);
         ImageCache.drawTile(ctx,image,left,top,
             spr.x,spr.y,spr.w,spr.h,false,false);
-        ImageCache.drawTile(ctx,image,left,ctx.canvas.height-chNo.h,
+        ImageCache.drawTile(ctx,image,left,top+sprites.player_bg.h-chNo.h,
             chNo.x,chNo.y,chNo.w,chNo.h,false,false);
         //TODO: stats
         /*

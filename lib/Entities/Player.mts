@@ -77,14 +77,7 @@ class Player{
             }
         }
     }
-    static update(room:Room,entity:Entity) {
-        const controls =Game.inputs.get(entity.uid);
-        entity.velocity.x = 0;
-        entity.spriteFrame+=0.2;
-        entity.spriteFrame %=2;
-        Player.#updateControls(room,entity);
-        Player.#updateGravity(room,entity);
-        //set sprites
+    static #updateSprites(room:Room,entity:Entity){
         //standing
         if(entity.velocity.x==0&&entity.velocity.y==0){
             //if the sprite is not alreay standing, change it to be standing but work out which way it should be facing
@@ -136,6 +129,9 @@ class Player{
                 entity.sprite = PLAYER_SPRITE.FALLING_RIGHT;
             }
         }
+
+    }
+    static #updateRooms(room:Room,entity:Entity){
         //move between rooms, going off one side means going onto another
         const buffer = 3;
         let didMove = false;//don't shoot on the same frame as moving between rooms
@@ -173,11 +169,14 @@ class Player{
         if(entity.position.y<0){ entity.position.y=1;}
         if(entity.position.x+entity.size.x > room.terrain.width){ entity.position.x=room.terrain.width-entity.size.x-1;}
         if(entity.position.y+entity.size.y > room.terrain.height){ entity.position.y=room.terrain.height-entity.size.y-1;}
-        //==shooting (TODO: spawn bullet & bresenham)
+        return didMove;
+    }
+    static #updateShoot(room:Room,entity:Entity){
+        const controls =Game.inputs.get(entity.uid);
         if(entity.cooldown>0){//canshoot
             entity.cooldown-=1;
         }
-        if (!didMove&&entity.hp>0&&controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
+        if (entity.hp>0&&controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
             if(entity.cooldown==0){//canshoot
                 const mousePos =controls.mousePosition;
                 const bulletEntity = new Entity();//TODO: real init...
@@ -221,11 +220,13 @@ class Player{
                 }
             }
         }
-        //==mining
+    }
+    static #updateMine(room:Room,entity:Entity){
+        const controls =Game.inputs.get(entity.uid);
         if(entity.secondaryCooldown>0){
             entity.secondaryCooldown-=1;
         }
-        if (!didMove&&entity.hp>0&&entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+        if (entity.hp>0&&entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
             entity.secondaryCooldown=10;
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
@@ -238,6 +239,20 @@ class Player{
             mineEntity.cooldown = 1;
             mineEntity.hp = 3;//mining can do damage 
             Room.AddEntity(room,mineEntity);
+        }
+
+    }
+    static update(room:Room,entity:Entity) {
+        entity.velocity.x = 0;
+        entity.spriteFrame+=0.2;
+        entity.spriteFrame %=2;
+        Player.#updateControls(room,entity);
+        Player.#updateGravity(room,entity);
+        Player.#updateSprites(room,entity);
+        const didMove = Player.#updateRooms(room,entity);
+        if(!didMove){
+            Player.#updateShoot(room,entity);
+            Player.#updateMine(room,entity);
         }
 
     }
