@@ -234,7 +234,13 @@ class Player{
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
         const image = ImageCache.getImage("./media/sprites.png");
         if (!image.loaded){return;}
-        let spr_stand1,spr_stand2,spr_jet1,spr_jet2,spr_fall1,spr_fall2 = sprites.driller_stand1;
+        let spr_stand1 = sprites.driller_stand1;
+        let spr_stand2 = sprites.driller_stand2;
+        let spr_jet1 = sprites.driller_jet1;
+        let spr_jet2 = sprites.driller_jet2;
+        let spr_fall1 = sprites.driller_fall1;
+        let spr_fall2 = sprites.driller_fall2;
+        let spr = spr_stand1;
         const chCl = Game.gameInstance.playerConfig.get(entity.uid)?.chosenClass;
         if(chCl == PlayerConfig.CLASSES.DRILLER){
             spr_stand1 = sprites.driller_stand1;
@@ -268,7 +274,6 @@ class Player{
             spr_fall1 = sprites.gunner_fall1;
             spr_fall2 = sprites.gunner_fall2;
         }
-        let spr = spr_stand1;
         let flipX =false;
         if(entity.sprite == PLAYER_SPRITE.STANDING_LEFT){
             spr =spr_stand1;

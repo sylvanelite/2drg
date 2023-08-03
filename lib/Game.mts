@@ -8,6 +8,7 @@ import { TERRAIN_WIDTH,TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
 import { ConvChain } from "./ConvChain.mjs";
 import { PlayerConfig, PlayerLiveCount } from "./Config/PlayerConfig.mjs";
 import { ResourceConfig,ResourceLiveCount } from "./Config/ResourceConfig.mjs";
+import { UI } from "./UI.mjs";
 class Game extends NetplayState{
     static gameInstance:Game;
 //TODO: serialise rooms->entities->terrain
@@ -371,6 +372,7 @@ class Game extends NetplayState{
         this.ctx.fillRect(0,0,this.ctx.canvas.width, this.ctx.canvas.height);
         const currentRoom = this.rooms[this.currentRoom];
         Room.draw(this.ctx,currentRoom);
+        UI.draw(this.ctx);
     }
 
 }
