@@ -286,6 +286,11 @@ class Game extends NetplayState{
         startingResource.hp=100;
         Room.AddEntity(startingRoom,startingResource);
         //enemies
+        let primaryCount = 0;
+        let secondaryCount = 0;
+        /*
+        this.chosenPrimary= ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION;
+        this.chosenSecondary= ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL; */
         for(const r of this.rooms){
             //TODO: real init...
             //enemies (NOTE: should probably be generated via events/waves)
@@ -324,6 +329,27 @@ class Game extends NetplayState{
                 resource.position.x=Math.floor(PRNG.prng()*r.terrain.width);
                 resource.position.y=Math.floor(PRNG.prng()*r.terrain.height);
                 resource.hp=100;
+                if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION){
+                    if(resource.euqipped == EuqippedKind.RESOURCE_BISMORE_BOTTOM||
+                        resource.euqipped == EuqippedKind.RESOURCE_BISMORE_TOP){
+                            primaryCount+=1;
+                    }
+                }
+                if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT){
+                    if(resource.euqipped == EuqippedKind.RESOURCE_EGG){
+                            primaryCount+=1;
+                    }
+                }
+                if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION){
+                    if(resource.euqipped == EuqippedKind.RESOURCE_AQUARQ){
+                            primaryCount+=1;
+                    }
+                }
+                if(mission.chosenSecondary==ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL){
+                    if(resource.euqipped == EuqippedKind.RESOURCE_FOSSIL){
+                            secondaryCount+=1;
+                    }
+                }
                 //grow resource height +1
                 if(PRNG.prng()>0.6 && resource.euqipped!= EuqippedKind.RESOURCE_EGG
                                    && resource.euqipped!= EuqippedKind.RESOURCE_AQUARQ
@@ -345,6 +371,12 @@ class Game extends NetplayState{
                     if(resource.euqipped == EuqippedKind.RESOURCE_GOLD_BOTTOM){
                         grow.euqipped = EuqippedKind.RESOURCE_GOLD_TOP;
                     }
+                    if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION){
+                        if(grow.euqipped == EuqippedKind.RESOURCE_BISMORE_BOTTOM||
+                            grow.euqipped == EuqippedKind.RESOURCE_BISMORE_TOP){
+                                primaryCount+=1;
+                        }
+                    }
                     grow.sprite = grow.euqipped;
                     grow.position.x=resource.position.x;
                     grow.position.y=resource.position.y-resource.size.y;
@@ -353,6 +385,42 @@ class Game extends NetplayState{
                 }
                 Room.AddEntity(r,resource);
             }
+        }
+        //ensure missionscan be cleared
+        for(let i=primaryCount;i<mission.goalPrimary+3;i+=1){//+3 so there's a bit exta
+            const rIdx = Math.floor(PRNG.prng()*this.rooms.length);
+            const r = this.rooms[rIdx];
+            const resource = new Entity();
+            resource.kind = EntityKind.Resource;
+            if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION){
+                resource.euqipped = EuqippedKind.RESOURCE_BISMORE_BOTTOM;
+            }
+            if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT){
+                resource.euqipped = EuqippedKind.RESOURCE_EGG;
+            }
+            if(mission.chosenPrimary==ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION){
+                resource.euqipped = EuqippedKind.RESOURCE_AQUARQ;
+            }
+            resource.sprite = resource.euqipped;
+            resource.position.x=Math.floor(PRNG.prng()*r.terrain.width);
+            resource.position.y=Math.floor(PRNG.prng()*r.terrain.height);
+            resource.hp=100;
+            Room.AddEntity(r,resource);
+        }
+        //ensure secondary missions can be cleared
+        for(let i=secondaryCount;i<mission.goalSecondary+3;i+=1){//+3 so there's a bit exta
+            const rIdx = Math.floor(PRNG.prng()*this.rooms.length);
+            const r = this.rooms[rIdx];
+            const resource = new Entity();
+            resource.kind = EntityKind.Resource;
+            if(mission.chosenSecondary==ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL){
+                resource.euqipped = EuqippedKind.RESOURCE_FOSSIL;
+            }
+            resource.sprite = resource.euqipped;
+            resource.position.x=Math.floor(PRNG.prng()*r.terrain.width);
+            resource.position.y=Math.floor(PRNG.prng()*r.terrain.height);
+            resource.hp=100;
+            Room.AddEntity(r,resource);
         }
     }
     static inputs: Map<number, NetplayInput>;
