@@ -21,6 +21,7 @@ interface IPlayerNum{
 }
 
 class RbMain extends NW{
+    static messageCallback(message:string){}//empty method, give an implementation in the UI to catch logs...
     //NW implementation
     connect(){
 		const peer = new Peer(this.GAME_ID+this.networkId);
@@ -93,9 +94,11 @@ class RbMain extends NW{
         //when client gets this broadcast, they do the corresponding action 
         if(this.isHost){
             if(rcvMessage.kind == 'join'){
+                RbMain.messageCallback("JOIN: "+rcvMessage.id);
                 this.joined.set(rcvMessage.id,"joined");
             }
             if(rcvMessage.kind == 'ready'){
+                RbMain.messageCallback("READY: "+rcvMessage.id);
                 this.joined.set(rcvMessage.id, "ready");
                 this.playerConfig.set(rcvMessage.id,rcvMessage.data.config);
             }
@@ -132,11 +135,13 @@ class RbMain extends NW{
     }
     static begin(self:RbMain,config:PlayerConfig){//TOOD: should only the host be able to start???
         if(self.joined.size<1){
+            RbMain.messageCallback("not enough remove players");
             console.log("not enough remote players",self.joined);
             return;
         }
         for(const [id,status] of self.joined){
             if(self.joined.get(id)!="ready"){
+                RbMain.messageCallback("player not ready:"+id);
                 console.log("player not ready",id,self.joined);
                 return;
             }

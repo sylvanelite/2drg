@@ -52,8 +52,9 @@
                 btnJoin.classList.add("hidden");
                 btnHost.classList.add("hidden");
                 RbMain.join(main,hostId);
-                
+                document.getElementById("lblConnecting").classList.remove("hidden");
                 setTimeout(()=>{
+                    document.getElementById("lblConnecting").classList.add("hidden");
                     document.getElementById("btnReady").classList.remove("hidden");
                 },5000);//TODO: proper wait for join to be successful
             };
@@ -67,6 +68,9 @@
                 btnReady.classList.remove("hidden");
                 div.classList.add("hidden");
                 RbMain.readyUp(main,{chosenClass:getChCl()});
+            };
+            RbMain.messageCallback = (msg)=>{
+                txtHostName.value=txtHostName.value+"\n"+msg;
             };
 
         };
@@ -88,7 +92,9 @@
             <option value="engineer">engineer</option>
             <option value="scout">scout</option>
         </select>
-        <input type="text" id="txtHostName" class="hidden" disabled></inpyt>
+        <label id="lblConnecting" class="hidden">connecting...</label>
+        <br/>
+        <textarea rows="10" id="txtHostName" class="hidden" disabled></textarea >
     </div>
 </body>
 </html>
