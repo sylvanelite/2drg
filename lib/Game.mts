@@ -6,7 +6,7 @@ import { Entity,Collision } from "./Entity.mjs";
 import { Room } from "./Room.mjs";
 import { TERRAIN_WIDTH,TERRAIN_HEIGHT, Terrain } from "./Terrain.mjs";
 import { ConvChain } from "./ConvChain.mjs";
-import { PlayerConfig } from "./Config/PlayerConfig.mjs";
+import { PlayerConfig, PlayerLiveCount } from "./Config/PlayerConfig.mjs";
 import { ResourceConfig,ResourceLiveCount } from "./Config/ResourceConfig.mjs";
 class Game extends NetplayState{
     static gameInstance:Game;
@@ -59,7 +59,22 @@ class Game extends NetplayState{
             //}
         }
         const resources = {
+            bismore:this.resourceLiveCount.bismore,
+            croppa:this.resourceLiveCount.croppa,
+            nitra:this.resourceLiveCount.nitra,
+            gold:this.resourceLiveCount.gold, 
+            egg:this.resourceLiveCount.egg,
+            aquarq:this.resourceLiveCount.aquarq,
+            fossil:this.resourceLiveCount.fossil,
         };
+        const players = [];
+        for(const [uid,player] of this.playerLiveCount){
+            players.push({
+                uid,
+                roomId :player.roomId,
+                roomIdx:player.roomIdx
+            });
+        }
         return {
             currentRoom:this.currentRoom,
             EnityUid:Entity.uid,
@@ -71,6 +86,7 @@ class Game extends NetplayState{
             //playerConfig
             //missionConfig
             resources,
+            players,
             RNG_A:PRNG.RNG_A,
             RNG_B:PRNG.RNG_B,
             RNG_C:PRNG.RNG_C,
@@ -116,13 +132,18 @@ class Game extends NetplayState{
                 tgt.terrain.terrain[i] = r.terr[i];//assumes w/h/length are correct
             }
         }
-        this.resourceLiveCount.bismore = value.bismore;
-        this.resourceLiveCount.croppa = value.croppa;
-        this.resourceLiveCount.nitra = value.nitra;
-        this.resourceLiveCount.gold = value.gold; 
-        this.resourceLiveCount.egg = value.egg;
-        this.resourceLiveCount.aquarq = value.aquarq;
-        this.resourceLiveCount.fossil = value.fossil;
+        this.resourceLiveCount.bismore = value.resources.bismore;
+        this.resourceLiveCount.croppa = value.resources.croppa;
+        this.resourceLiveCount.nitra = value.resources.nitra;
+        this.resourceLiveCount.gold = value.resources.gold; 
+        this.resourceLiveCount.egg = value.resources.egg;
+        this.resourceLiveCount.aquarq = value.resources.aquarq;
+        this.resourceLiveCount.fossil = value.resources.fossil;
+        for(const p of value.players){
+            const cfg = this.playerLiveCount.get(p.uid);
+            cfg.roomId = p.roomId;
+            cfg.roomIdx= p.roomIdx;
+        }
         PRNG.RNG_A = value.RNG_A;
         PRNG.RNG_B = value.RNG_B;
         PRNG.RNG_C = value.RNG_C;
@@ -139,6 +160,7 @@ class Game extends NetplayState{
     playerConfig:Map<number,PlayerConfig>;
     missionConfig:ResourceConfig;
     resourceLiveCount:ResourceLiveCount;
+    playerLiveCount:Map<number,PlayerLiveCount>;
     constructor(canvas:HTMLCanvasElement) {
         super();
         this.tickRate = 40;//time between ticks, i.e. 1000/this.tickRate = fps
@@ -150,6 +172,7 @@ class Game extends NetplayState{
         this.playerConfig = new Map();
         this.missionConfig = new ResourceConfig();
         this.resourceLiveCount = new ResourceLiveCount();
+        this.playerLiveCount = new Map();
     }
     init(playerId:number,players:Array<PlayerConfig>,mission:ResourceConfig){
         Entity.uid = 0;//reset the ID count so that playerIds are kept in sync
@@ -249,6 +272,8 @@ class Game extends NetplayState{
             }
             this.playerConfig.set(playerEntity.uid,players[i]);
             playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
+            const playerLive = new PlayerLiveCount();//will be populated on add()
+            this.playerLiveCount.set(playerEntity.uid,playerLive);
             Room.AddEntity(startingRoom,playerEntity);
         }
         const startingResource = new Entity();//for testing, triggers wave

@@ -12,4 +12,8 @@ class PlayerConfig{
         this.chosenClass= PlayerConfig.CLASSES.DRILLER;
     }
 }
-export {PlayerConfig}
+class PlayerLiveCount{
+    roomId:number=0;
+    roomIdx:number=0;
+}
+export {PlayerConfig,PlayerLiveCount}

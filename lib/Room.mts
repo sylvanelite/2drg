@@ -1,10 +1,11 @@
-import { EntityKind, xyToIdx } from "./types.mjs";
+import { EntityKind, EuqippedKind, xyToIdx } from "./types.mjs";
 import { Entity } from "./Entity.mjs";
 import { Terrain } from "./Terrain.mjs";
 import { Game } from "./Game.mjs";
 import { FONT_WIDTH,FONT_HEIGHT,LETTER_H,LETTER_W,font } from "./sprites.mjs";
 import { ImageCache } from "./ImageCache.mjs";
 import { ResourceConfig } from "./Config/ResourceConfig.mjs";
+import { PlayerConfig } from "./Config/PlayerConfig.mjs";
 class Room{
     idx:number;
     x:number;
@@ -46,7 +47,14 @@ class Room{
         }
         entity.roomId = room.maxEntities;
         room.maxEntities+=1;
-        if(entity.kind==EntityKind.Player){room.players.add(entity.roomId);}
+        if(entity.kind==EntityKind.Player){
+            room.players.add(entity.roomId);
+            const cfg = Game.gameInstance.playerLiveCount.get(entity.uid);
+            if(cfg){//should only be null when unit testing 
+                cfg.roomId = entity.roomId;
+                cfg.roomIdx = room.idx;
+            }
+        }
     }
     static RemoveEntity(room:Room,entity:Entity){
         const idxToRemove = entity.roomId;
@@ -122,17 +130,13 @@ class UI{
         //this gives a scale factor of 12 ==((256*3)/64)
         //start at playerX,Y
         const saleFactor = 6;//scale factor of 6 gives 1 px squares, 12 would need 2 px squares and 1/2 x,y
-        let playerX=0;//TODO player coords
-        let playerY=0;
-        for(let i=0;i<room.maxEntities;i+=1){
-            const ent = room.entities[i];
-            if(ent.uid ==Game.gameInstance.playerUid){
-                playerX=Math.floor(ent.position.x/saleFactor)*saleFactor+room.x*room.terrain.width;
-                playerY=Math.floor(ent.position.y/saleFactor)*saleFactor+room.y*room.terrain.height;
-                break;
-            }
-        }
-        ctx.fillStyle="#FFFFFF";
+        
+        const localPlayer= Game.gameInstance.playerLiveCount.get(Game.gameInstance.playerUid);
+        const playerEntity = Game.gameInstance.rooms[localPlayer.roomIdx].entities[localPlayer.roomId];
+        const playerX=Math.floor(playerEntity.position.x/saleFactor)*saleFactor+room.x*room.terrain.width;
+        const playerY=Math.floor(playerEntity.position.y/saleFactor)*saleFactor+room.y*room.terrain.height;
+        const left = room.terrain.width;
+        ctx.fillStyle="#AAAAAA";
         for(let x=-32;x<=32;x+=1){
             for(let y=-64;y<=64;y+=1){
                 const worldX = playerX+x*saleFactor;
@@ -151,11 +155,27 @@ class UI{
                         if(pointY<=1){pointY=1;}
                         const filled = Terrain.getBit(pointX,pointY,worldRoom.terrain);
                         if(filled){//draw
-                            ctx.fillRect(256+(x+32)*1,0+(y+64)*1,1,1);
+                            ctx.fillRect(left+(x+32)*1,0+(y+64)*1,1,1);
                         }
                 }
             }
         }
+        const chCl = Game.gameInstance.playerConfig.get(playerEntity.uid)?.chosenClass;
+        if(chCl==PlayerConfig.CLASSES.DRILLER){//yellow
+            ctx.fillStyle = "#FFFF00";
+        }
+        if(chCl==PlayerConfig.CLASSES.SCOUT){//blue
+            ctx.fillStyle = "#0000FF";
+        }
+        if(chCl==PlayerConfig.CLASSES.ENGINEER){//red
+            ctx.fillStyle = "#FF0000";
+
+        }
+        if(chCl==PlayerConfig.CLASSES.GUNNER){//green
+            ctx.fillStyle = "#00FF00";
+        }
+        ctx.fillRect(left+32,64,2,2);
+        
 
     }
 
