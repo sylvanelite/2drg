@@ -236,6 +236,7 @@ class Player{
             mineEntity.position.x = entity.position.x+Math.floor(entity.size.x/2);
             mineEntity.position.y = entity.position.y+Math.floor(entity.size.y/2);
             mineEntity.cooldown = 1;
+            mineEntity.hp = 3;//mining can do damage 
             Room.AddEntity(room,mineEntity);
         }
 
