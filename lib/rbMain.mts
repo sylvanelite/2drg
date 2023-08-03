@@ -176,6 +176,7 @@ class RbMain extends NW{
     static host=(self:RbMain)=>{
         self.host();
         console.log(self.networkId);
+        return self.networkId;
     }
     static join(self:RbMain,hostId:string){
         self.join(hostId);

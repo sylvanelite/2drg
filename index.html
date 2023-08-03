@@ -5,6 +5,7 @@
 	<style type="text/css">
 		html,body{margin:0; padding:0}
 		canvas{display:block;image-rendering: pixelated;}
+        .hidden{display: none;}
 	</style>
 	<script type="module">
 		import {RbMain} from "./build/lib/rbMain.mjs";
@@ -13,10 +14,82 @@
 		window.join=(id)=>{RbMain.join(main,id);};
 		window.begin=(config)=>{RbMain.begin(main,config);};
 		window.readyUp=(config)=>{RbMain.readyUp(main,config);};
-	</script>
+        //
+        import {PlayerConfig} from './build/lib/Config/PlayerConfig.mjs';
+
+        const init = ()=>{
+            const div = document.getElementById("host");
+            div.classList.remove("hidden");
+            const btnHost = document.getElementById("btnHost");
+            const btnJoin = document.getElementById("btnJoin");
+            const btnBegin = document.getElementById("btnBegin");
+            const btnReady = document.getElementById("btnReady");
+            const iptMyclass = document.getElementById("iptMyclass");
+            const canvas = document.getElementById("canvas");
+            const txtHostName = document.getElementById("txtHostName");
+            const getChCl = ()=>{
+                const clSelected =iptMyclass.options[iptMyclass.selectedIndex].value;
+                if(clSelected == "driller"){ return PlayerConfig.CLASSES.DRILLER; }
+                if(clSelected == "gunner"){  return PlayerConfig.CLASSES.GUNNER;  }
+                if(clSelected == "engineer"){ return PlayerConfig.CLASSES.ENGINEER; }
+                if(clSelected == "scout"){ return PlayerConfig.CLASSES.SCOUT; }
+                return PlayerConfig.CLASSES.DRILLER; 
+            };
+            btnHost.onclick = ()=>{
+                //host, only option is 'begin'
+                btnJoin.classList.add("hidden");
+                btnHost.classList.add("hidden");
+                btnBegin.classList.remove("hidden");
+
+                const hostID = RbMain.host(main);
+                txtHostName.value="hostID:"+hostID;
+                txtHostName.classList.remove("hidden");
+            };
+            btnJoin.onclick = ()=>{
+                //join, only option is 'ready'
+                const hostId = prompt("enter host Id:");
+                if(!hostId){return;}
+                btnJoin.classList.add("hidden");
+                btnHost.classList.add("hidden");
+                RbMain.join(main,hostId);
+                
+                setTimeout(()=>{
+                    document.getElementById("btnReady").classList.remove("hidden");
+                },5000);//TODO: proper wait for join to be successful
+            };
+            btnBegin.onclick = ()=>{
+                canvas.classList.remove("hidden");
+                div.classList.add("hidden");
+                RbMain.begin(main,{chosenClass:getChCl()});
+            };
+            btnReady.onclick = ()=>{
+                canvas.classList.remove("hidden");
+                btnReady.classList.remove("hidden");
+                div.classList.add("hidden");
+                RbMain.readyUp(main,{chosenClass:getChCl()});
+            };
+
+        };
+
+        window.onload=init;
+
+    </script>
 </head>
 <body>
-    <canvas id="canvas" width="320" height="200"></canvas>
+    <canvas class="hidden" id="canvas" width="320" height="200"></canvas>
+    <div id="host" class="hidden">
+        <button id="btnHost">Host</button>
+        <button id="btnJoin">Join</button>
+        <button id="btnBegin" class="hidden">Begin</button>
+        <button id="btnReady" class="hidden">Ready</button>
+        <select id="iptMyclass">
+            <option selected value="driller">driller</option>
+            <option value="gunner">gunner</option>
+            <option value="engineer">engineer</option>
+            <option value="scout">scout</option>
+        </select>
+        <input type="text" id="txtHostName" class="hidden" disabled></inpyt>
+    </div>
 </body>
 </html>
 
