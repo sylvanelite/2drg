@@ -254,7 +254,7 @@ class Player{
                     const cfg = Game.gameInstance.playerLiveCount.get(ent.uid);
                     if(cfg){
                         cfg.reviveCount+=1;
-                        if(cfg.reviveCount==30){//takes a certain number of tries to revive
+                        if(cfg.reviveCount>=30){//takes a certain number of tries to revive
                             cfg.reviveCount=0;
                             ent.hp=33;
                         }
