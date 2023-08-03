@@ -2,11 +2,10 @@ import { EntityKind, EuqippedKind, xyToIdx } from "./types.mjs";
 import { Entity } from "./Entity.mjs";
 import { Terrain } from "./Terrain.mjs";
 import { Game } from "./Game.mjs";
-import { FONT_WIDTH,FONT_HEIGHT,LETTER_H,LETTER_W,font } from "./sprites.mjs";
+import { sprites,LETTER_H,LETTER_W,font } from "./sprites.mjs";
 import { ImageCache } from "./ImageCache.mjs";
 import { ResourceConfig } from "./Config/ResourceConfig.mjs";
 import { PlayerConfig } from "./Config/PlayerConfig.mjs";
-import { Room } from "./Room.mjs";
 class UI{
     static draw(ctx:CanvasRenderingContext2D){
         //have: 64 px from right 
@@ -16,6 +15,11 @@ class UI{
         UI.#drawMinimap(ctx);
         //objectives
         UI.#drawOverview(ctx);
+        for(const [id,p] of Game.gameInstance.playerLiveCount){
+            const rm = Game.gameInstance.rooms[p.roomIdx];
+            const ent = rm.entities[p.roomId];
+            UI.#drawPlayers(ctx,ent)
+        }
     }
     static #drawMinimap(ctx:CanvasRenderingContext2D){
         //render a 64x128 stripe of the global map, scaled to 2x2 pixels (32x64 operations)
@@ -126,6 +130,58 @@ class UI{
         }
         objectiveY+=LETTER_H;
         UI.drawText(ctx,"Gold: "+ Game.gameInstance.resourceLiveCount.gold,objectiveX,objectiveY);
+
+    }
+    
+    static #drawPlayers(ctx:CanvasRenderingContext2D,entity:Entity){
+        const image = ImageCache.getImage("./media/sprites.png");
+        if (!image.loaded){return;}
+        let spr = sprites.player_driller;
+        const chCl = Game.gameInstance.playerConfig.get(entity.uid)?.chosenClass;
+        if(chCl == PlayerConfig.CLASSES.DRILLER){
+            spr = sprites.player_driller;
+        }
+        if(chCl == PlayerConfig.CLASSES.ENGINEER){
+            spr = sprites.player_engineer;
+        }
+        if(chCl == PlayerConfig.CLASSES.SCOUT){
+            spr = sprites.player_scout;
+        }
+        if(chCl == PlayerConfig.CLASSES.GUNNER){
+            spr = sprites.player_gunner;
+        }
+        let chNo = sprites.player1;
+        if(entity.uid==0){chNo = sprites.player1;}
+        if(entity.uid==1){chNo = sprites.player2;}
+        if(entity.uid==2){chNo = sprites.player3;}
+        if(entity.uid==3){chNo = sprites.player4;}
+        //draw order:
+        //bg
+        //player chCl
+        //player number
+        //entity stats
+        const left = entity.uid*sprites.player_bg.w;
+        const top = ctx.canvas.height-sprites.player_bg.h;
+        ImageCache.drawTile(ctx,image,left,top,
+            sprites.player_bg.x,sprites.player_bg.y,sprites.player_bg.w,sprites.player_bg.h,false,false);
+        ImageCache.drawTile(ctx,image,left,top,
+            spr.x,spr.y,spr.w,spr.h,false,false);
+        ImageCache.drawTile(ctx,image,left,ctx.canvas.height-chNo.h,
+            chNo.x,chNo.y,chNo.w,chNo.h,false,false);
+        //TODO: stats
+        /*
+        heart:8px wide
+        bg:64 wide, with 24 being the LHS image=40px left
+        5 hearts = 40px
+        maxHp=100, 100/5 = 20
+        */
+        let heartX = left+chNo.w;
+        for(let i=0;i<entity.maxHp;i+=20){
+            if(entity.hp<i){break;}
+            ImageCache.drawTile(ctx,image,heartX,top,
+                sprites.heart.x,sprites.heart.y,sprites.heart.w,sprites.heart.h,false,false);
+            heartX+=sprites.heart.w;
+        }
 
     }
     static drawText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number){
