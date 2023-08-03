@@ -137,4 +137,27 @@ describe("test playerIds",function(){
         }
     });
     
+    it("player at end",async function() {
+        //removing from middle triggers swap
+        //swapping something that is not a player, with a player, should update the room's player instances
+        const room = new Room();
+        for(let i=0;i<100;i+=1){
+            const e = new Entity();
+            if(i>50){
+                e.kind = EntityKind.Player;
+            }
+            Room.AddEntity(room,e);
+        }
+        for(let i=25;i<50;i+=1){
+            const e = room.entities[i];
+            Room.RemoveEntity(room,e);
+        }
+        expect(room.maxEntities).toBe(75);
+        assertRoomEntities(room);
+        for(const pid of room.players){
+            expect(pid).toBeLessThan(75);
+        }
+    });
+    
+    
 });

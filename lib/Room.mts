@@ -59,9 +59,23 @@ class Room{
         if(idxToRemove==-1){return;}//entity was already destroyed earlier
         const lastEnt = room.entities[room.maxEntities-1];
         if(lastEnt.roomId!= entity.roomId){//if it's already at the end, can skip the swap
+            if(lastEnt.kind==EntityKind.Player){//if swapping with a player, update tracking 
+                room.players.delete(lastEnt.roomId); 
+            }
             room.entities[idxToRemove] = lastEnt;//swap element
             room.entities[room.maxEntities-1] = entity;//ensure the references are swapped, so that we don't end up with aliasing
             lastEnt.roomId = idxToRemove;
+            if(lastEnt.kind==EntityKind.Player){ 
+                room.players.add(lastEnt.roomId);
+                if(Game.gameInstance){//should only be null when unit testing 
+                    const cfg = Game.gameInstance.playerLiveCount.get(lastEnt.uid);
+                    if(cfg){//should only be null when unit testing 
+                        cfg.roomId = lastEnt.roomId;
+                        cfg.roomIdx = room.idx;
+                    }
+                }
+                
+            }
         }
         if(entity.kind==EntityKind.Player){room.players.delete(entity.roomId);}
         entity.roomId = -1;
