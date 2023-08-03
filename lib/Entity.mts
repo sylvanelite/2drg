@@ -28,7 +28,7 @@ class Entity{
         Entity.uid+=1;
         this.roomId=0;
         this.kind = EntityKind.Enemy;
-        this.hp=0;
+        this.hp=100;
         this.maxHp=100;
         this.cooldown=0;
         this.secondaryCooldown=0;

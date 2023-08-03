@@ -15,10 +15,10 @@ class Enemy{
             entity.cooldown+=6+Math.floor(PRNG.prng()*3);
             let attack = 5;
             if(entity.euqipped = EuqippedKind.ENEMY_GRUNT){
-                attack=15;
+                attack=5;
             }
             if(entity.euqipped = EuqippedKind.ENEMY_WINGED){
-                attack=10;
+                attack=2;
             }
             //deal damage to players
             Collision.checkCollisions(room,entity,(collisionId:number)=>{

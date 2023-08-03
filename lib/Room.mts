@@ -81,15 +81,6 @@ class Room{
             const ent = room.entities[i];
             Entity.draw(ctx,ent);
         }
-        if(Game.inputs){
-            const controls =Game.inputs.get(Game.gameInstance.playerUid);
-            if(controls.mousePosition){
-                ctx.strokeStyle = '1px solid black';
-                ctx.beginPath();
-                ctx.arc(Math.floor(controls.mousePosition.x)-0.5,Math.floor(controls.mousePosition.y)-0.5,10,0,Math.PI*2);
-                ctx.stroke();
-            }
-        }
         ctx.fillStyle = "#FF0000";
         //red line on locked sides
         if(room.locked_D||room.y==Game.gameInstance.worldSize-1){

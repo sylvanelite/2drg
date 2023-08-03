@@ -20,13 +20,10 @@ const PLAYER_SPRITE = {
     FALLING_RIGHT:7
 };
 class Player{
-    static update(room:Room,entity:Entity) {
+    static #updateControls(room:Room,entity:Entity){
+        if(entity.hp<=0){return;}//can't move if KO'ed
         const controls =Game.inputs.get(entity.uid);
-        let i = 0;
         const max_h_speed = 1;
-        entity.velocity.x = 0;
-        entity.spriteFrame+=0.2;
-        entity.spriteFrame %=2;
         if( NetplayInput.getPressed(controls,CONTROLS.LEFT)){
             entity.velocity.x = -max_h_speed;
         }
@@ -34,7 +31,7 @@ class Player{
             entity.velocity.x = max_h_speed;
         }
         if(entity.velocity.x!=0){
-            for (i = 0; i < max_h_speed; i+=1) {
+            for (let i = 0; i < max_h_speed; i+=1) {
                 if(entity.velocity.x<0){//move left
                     if (!Terrain.hitTest(room.terrain, entity.position.x , entity.position.y, 1, 1)) {
                         entity.position.x -= 1;
@@ -57,11 +54,13 @@ class Player{
         if (NetplayInput.getPressed(controls,CONTROLS.JUMP)) {
             entity.velocity.y = -2;
         }
-        entity.velocity.y+=1; 
+    }
+    static #updateGravity(room:Room,entity:Entity){
+        entity.velocity.y+=1;//fall even if KO'ed
         if(entity.velocity.y>2){entity.velocity.y=2;}//max fall speed
         if (entity.velocity.y > 0) {
             //check ground
-            for (i = 0; i < entity.velocity.y; i+=1) {
+            for (let i = 0; i < entity.velocity.y; i+=1) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)) {
                     entity.position.y += 1;
                 } else {
@@ -69,7 +68,7 @@ class Player{
                 }
             }
         } else {
-            for (i = 0; i < Math.abs(entity.velocity.y); i+=1) {
+            for (let i = 0; i < Math.abs(entity.velocity.y); i+=1) {
                 if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, entity.size.x, 1)) {
                     entity.position.y -= 1;
                 } else {
@@ -77,6 +76,14 @@ class Player{
                 }
             }
         }
+    }
+    static update(room:Room,entity:Entity) {
+        const controls =Game.inputs.get(entity.uid);
+        entity.velocity.x = 0;
+        entity.spriteFrame+=0.2;
+        entity.spriteFrame %=2;
+        Player.#updateControls(room,entity);
+        Player.#updateGravity(room,entity);
         //set sprites
         //standing
         if(entity.velocity.x==0&&entity.velocity.y==0){
@@ -168,7 +175,7 @@ class Player{
         if(entity.cooldown>0){//canshoot
             entity.cooldown-=1;
         }
-        if (controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
+        if (entity.hp>0&&controls.mousePosition&& NetplayInput.getPressed(controls,CONTROLS.SHOOT) ) {
             if(entity.cooldown==0){//canshoot
                 const mousePos =controls.mousePosition;
                 const bulletEntity = new Entity();//TODO: real init...
@@ -182,7 +189,7 @@ class Player{
                 switch(entity.euqipped){
                     case EuqippedKind.WEAPON_FLAMETHROWER:{
                         entity.cooldown = 1;//cooldown 
-                        bulletEntity.hp = 1;//damage
+                        bulletEntity.hp = 5;//damage
                         bulletEntity.cooldown = 20;//bullet lifetime
                         const spreadAngle = 3/( 180 / Math.PI);//5 degrees in rad
                         const spread = PRNG.prng()*spreadAngle-PRNG.prng()*spreadAngle;
@@ -193,7 +200,7 @@ class Player{
                     }
                     case EuqippedKind.WEAPON_MACHINEGUN:{
                         entity.cooldown = 5;//cooldown 
-                        bulletEntity.hp = 5;//damage
+                        bulletEntity.hp = 15;//damage
                         bulletEntity.cooldown = 100;//bullet lifetime
                         bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
                         bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
@@ -216,7 +223,7 @@ class Player{
         if(entity.secondaryCooldown>0){
             entity.secondaryCooldown-=1;
         }
-        if (entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
+        if (entity.hp>0&&entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
             entity.secondaryCooldown=10;
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
@@ -318,6 +325,9 @@ class Player{
                 spr_fall1:
                 spr_fall2;
             flipX = false;
+        }
+        if(entity.hp<=0){//override movement if KO'ed
+            spr = spr_fall2;
         }
         ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
             spr.x,spr.y,spr.w,spr.h,flipX,false);

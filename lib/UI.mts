@@ -20,6 +20,17 @@ class UI{
             const ent = rm.entities[p.roomId];
             UI.#drawPlayers(ctx,ent)
         }
+        //aiming
+        if(Game.inputs){
+            const controls =Game.inputs.get(Game.gameInstance.playerUid);
+            if(controls.mousePosition){
+                ctx.lineWidth=1;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(Math.floor(controls.mousePosition.x)-0.5,Math.floor(controls.mousePosition.y)-0.5,10,0,Math.PI*2);
+                ctx.stroke();
+            }
+        }
     }
     static #drawMinimap(ctx:CanvasRenderingContext2D){
         //render a 64x128 stripe of the global map, scaled to 2x2 pixels (32x64 operations)
@@ -182,7 +193,19 @@ class UI{
                 sprites.heart.x,sprites.heart.y,sprites.heart.w,sprites.heart.h,false,false);
             heartX+=sprites.heart.w;
         }
-
+        //if a player is downed, X out their status
+        if(entity.hp<=0){
+            ctx.lineWidth=3;
+            ctx.strokeStyle="#FF0000";
+            ctx.beginPath();
+            ctx.moveTo(left,top);
+            ctx.lineTo(left+sprites.player_bg.w,top+sprites.player_bg.h);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(left,top+sprites.player_bg.h);
+            ctx.lineTo(left+sprites.player_bg.w,top);
+            ctx.stroke();
+        }
     }
     static drawText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number){
         const image = ImageCache.getImage("./media/font-pixel-simplicity_grey.png");
