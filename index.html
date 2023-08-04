@@ -2,11 +2,7 @@
 <html>
 <head>
 	<title>2DRG</title>
-	<style type="text/css">
-		html,body{margin:0; padding:0}
-		canvas{display:block;image-rendering: pixelated;}
-        .hidden{display: none;}
-	</style>
+	<link href="./style.css" rel="stylesheet">
 	<script type="module">
 		import {RbMain} from "./build/lib/rbMain.mjs";
 		const main = new RbMain();
@@ -95,21 +91,23 @@
     </script>
 </head>
 <body>
-    <canvas class="hidden" id="canvas" width="320" height="200"></canvas>
+    <canvas class="hidden canvasZoom" id="canvas" width="320" height="200"></canvas>
     <div id="host" class="hidden">
-        <button id="btnHost">Host</button>
-        <button id="btnJoin">Join</button>
-        <button id="btnBegin" class="hidden">Begin</button>
-        <button id="btnReady" class="hidden">Ready</button>
-        <select id="iptMyclass">
-            <option selected value="driller">driller</option>
-            <option value="gunner">gunner</option>
-            <option value="engineer">engineer</option>
-            <option value="scout">scout</option>
-        </select>
+        <button id="btnHost" class="btn">Host</button>
+        <button id="btnJoin" class="btn">Join</button>
+        <button id="btnBegin" class="hidden btn">Begin</button>
+        <button id="btnReady" class="hidden btn">Ready</button>
+        <div class="classPicker">
+            <label>Character Class:</label><div class="select"><select id="iptMyclass">
+                <option selected value="driller">driller</option>
+                <option value="gunner">gunner</option>
+                <option value="engineer">engineer</option>
+                <option value="scout">scout</option>
+            </select></div>
+        </div>
         <label id="lblConnecting" class="hidden">connecting...</label>
         <br/>
-        <textarea rows="10" id="txtHostName" class="hidden" disabled></textarea >
+        <textarea rows="10" id="txtHostName" class="hidden hostText" disabled></textarea >
     </div>
 </body>
 </html>
