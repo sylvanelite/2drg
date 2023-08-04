@@ -6,6 +6,18 @@ canvas{display:block;image-rendering: pixelated;}
     height:540px;
 }
 .hidden{display: none;}
+.classPicker{
+	margin: 15px 30px;
+}
+.hostText{
+	padding: 25px 80px;
+	margin: 15px 30px;
+}
+.logo {
+    width: 20em;
+    image-rendering: pixelated;
+	margin: 15px 30px;
+}
 .btn {
 	border: none;
 	font-family: inherit;
@@ -37,13 +49,6 @@ canvas{display:block;image-rendering: pixelated;}
 .btn:active {
 	color: #23b499;
 	background: #2b2e2e;
-}
-.classPicker{
-	margin: 15px 30px;
-}
-.hostText{
-	padding: 25px 80px;
-	margin: 15px 30px;
 }
 
 select {
