@@ -20,6 +20,7 @@ class UI{
             const ent = rm.entities[p.roomId];
             UI.#drawPlayers(ctx,ent)
         }
+        UI.#drawWinCon(ctx);
         //aiming
         if(Game.inputs){
             const controls =Game.inputs.get(Game.gameInstance.playerUid);
@@ -207,6 +208,28 @@ class UI{
             ctx.stroke();
         }
     }
+    static #drawWinCon(ctx:CanvasRenderingContext2D){
+        let primaryClear = false;
+        let secondaryClear = false;
+        if(Game.gameInstance.missionConfig.chosenPrimary=ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION){
+            primaryClear = Game.gameInstance.resourceLiveCount.bismore >= Game.gameInstance.missionConfig.goalPrimary;
+        }
+        if(Game.gameInstance.missionConfig.chosenPrimary=ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT){
+            primaryClear = Game.gameInstance.resourceLiveCount.egg >= Game.gameInstance.missionConfig.goalPrimary;
+        }
+        if(Game.gameInstance.missionConfig.chosenPrimary=ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION){
+            primaryClear = Game.gameInstance.resourceLiveCount.aquarq >= Game.gameInstance.missionConfig.goalPrimary;
+        }
+        if(Game.gameInstance.missionConfig.chosenSecondary=ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL){
+            secondaryClear = Game.gameInstance.resourceLiveCount.fossil >= Game.gameInstance.missionConfig.goalSecondary;
+        }
+        if(primaryClear){
+            UI.drawText(ctx,"YOU WIN!! (no drop pod)",ctx.canvas.width/2-72,16);
+            if(secondaryClear){
+                UI.drawText(ctx,"BONUS CLEAR!",ctx.canvas.width/2-72,32);
+            }
+        }
+    }
     static drawText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number){
         const image = ImageCache.getImage("./media/font-pixel-simplicity_grey.png");
         if (!image.loaded){return;}
@@ -216,6 +239,7 @@ class UI{
             ImageCache.drawTile(ctx,image,x+i*LETTER_W,y,fontLett.x,fontLett.y,LETTER_W,LETTER_H,false,false);
         }
     }
+
     
 }
 export {UI}
