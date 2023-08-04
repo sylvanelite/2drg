@@ -3,6 +3,8 @@ import { idxToXy,CONTROLS,PRNG,EuqippedKind, EntityKind } from "../types.mjs";
 import { Collision, Entity } from "../Entity.mjs";
 import { Room } from "../Room.mjs";
 import { Terrain } from "../Terrain.mjs";
+import { ImageCache } from "../ImageCache.mjs";
+import { sprites } from "../sprites.mjs";
 class Enemy{
     
     static update(room:Room,entity:Entity){
@@ -74,15 +76,21 @@ class Enemy{
     }
     
     static draw(ctx:CanvasRenderingContext2D,entity:Entity){
-        ctx.fillStyle = "#0000FF";
+        const image = ImageCache.getImage("./media/sprites.png");
+        if (!image.loaded){return;}
+        let spr = sprites.enemy_grunt;
+        let flipX = entity.velocity.x <0;
+        const isAtk = (entity.cooldown<=2);
+        if(entity.euqipped == EuqippedKind.ENEMY_GRUNT){
+            spr = sprites.enemy_grunt;
+            if(isAtk){spr=sprites.enemy_grunt_attack;}
+        }
         if(entity.euqipped == EuqippedKind.ENEMY_WINGED){
-            ctx.fillStyle = "#54D7FF";
+            spr = sprites.enemy_winged;
+            if(isAtk){spr=sprites.enemy_winged_attack;}
         }
-        ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
-        if(entity.cooldown<=1){//attack
-            ctx.fillStyle = "#FF00FF";
-            ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
-        }
+        ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
+            spr.x,spr.y,spr.w,spr.h,flipX,false);
     }
 }
 export {Enemy}

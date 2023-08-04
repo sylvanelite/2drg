@@ -27,6 +27,18 @@ const sprites = {
         x:7*8,y:0*8,
         w:8,h:8
     },
+    enemy_grunt:{
+        x:3*8,y:1*8,
+        w:8,h:8},
+    enemy_grunt_attack:{
+        x:4*8,y:2*8,
+        w:8,h:8},
+    enemy_winged:{
+        x:5*8,y:2*8,
+        w:8,h:8},
+    enemy_winged_attack:{
+        x:6*8,y:2*8,
+        w:8,h:8},
     driller_stand2:{
         x:0*8,y:1*8,
         w:8,h:8
