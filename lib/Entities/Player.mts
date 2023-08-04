@@ -190,12 +190,12 @@ class Player{
                 switch(entity.euqipped){
                     case EuqippedKind.WEAPON_FLAMETHROWER:{
                         entity.cooldown = 1;//cooldown 
-                        bulletEntity.hp = 5;//damage
+                        bulletEntity.hp = 3;//damage
                         bulletEntity.cooldown = 20;//bullet lifetime
                         const spreadAngle = 3/( 180 / Math.PI);//5 degrees in rad
                         const spread = PRNG.prng()*spreadAngle-PRNG.prng()*spreadAngle;
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*(2+PRNG.prng()*3);//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*(2+PRNG.prng()*3);//speed
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads+spread)*(1+PRNG.prng()*3);//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads+spread)*(1+PRNG.prng()*3);//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
                     }
@@ -203,8 +203,8 @@ class Player{
                         entity.cooldown = 5;//cooldown 
                         bulletEntity.hp = 15;//damage
                         bulletEntity.cooldown = 100;//bullet lifetime
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*4;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*4;//speed
                         Room.AddEntity(room,bulletEntity);
                         break;
                     }
@@ -212,9 +212,30 @@ class Player{
                         entity.cooldown = 50;//cooldown 
                         bulletEntity.hp = 50;//damage
                         bulletEntity.cooldown = 100;//bullet lifetime
-                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*10;//speed
-                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*10;//speed
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*6;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*6;//speed
                         Room.AddEntity(room,bulletEntity);
+                        break;
+                    }
+                    case EuqippedKind.WEAPON_SHOTGUN:{
+                        entity.cooldown = 20;//cooldown 
+                        bulletEntity.hp = 20;//damage
+                        bulletEntity.cooldown = 10;//bullet lifetime
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads)*3;//speed
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads)*3;//speed
+                        Room.AddEntity(room,bulletEntity);
+                        for(let i=1;i<3;i+=1){
+                            const spread = new Entity();
+                            spread.kind = EntityKind.Bullet;
+                            spread.euqipped = entity.euqipped;//bullet type match the weapon that shot it
+                            spread.position.x=bulletEntity.position.x+i*2;//offset shards by a bit
+                            spread.position.y=bulletEntity.position.y+i*2;
+                            spread.size.x = 2;
+                            spread.size.y = 2;
+                            spread.velocity.x = Math.cos(aimingAngleRads)*(1+PRNG.prng()*3);//speed
+                            spread.velocity.y = Math.sin(aimingAngleRads)*(1+PRNG.prng()*3);//speed
+                            Room.AddEntity(room,spread);
+                        }
                         break;
                     }
                 }

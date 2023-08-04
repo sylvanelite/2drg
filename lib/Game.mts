@@ -276,6 +276,18 @@ class Game extends NetplayState{
             }
             this.playerConfig.set(playerEntity.uid,players[i]);
             playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
+            if(players[i].chosenClass == PlayerConfig.CLASSES.DRILLER){
+                playerEntity.euqipped = EuqippedKind.WEAPON_FLAMETHROWER;
+            }
+            if(players[i].chosenClass == PlayerConfig.CLASSES.SCOUT){
+                playerEntity.euqipped = EuqippedKind.WEAPON_SNIPER;
+            }
+            if(players[i].chosenClass == PlayerConfig.CLASSES.ENGINEER){
+                playerEntity.euqipped = EuqippedKind.WEAPON_SHOTGUN;
+            }
+            if(players[i].chosenClass == PlayerConfig.CLASSES.GUNNER){
+                playerEntity.euqipped = EuqippedKind.WEAPON_MACHINEGUN;
+            }
             const playerLive = new PlayerLiveCount();//will be populated on add()
             this.playerLiveCount.set(playerEntity.uid,playerLive);
             Room.AddEntity(startingRoom,playerEntity);

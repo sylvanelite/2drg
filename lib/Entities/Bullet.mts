@@ -54,7 +54,7 @@ class Bullet{
                 if(entity.euqipped == EuqippedKind.WEAPON_SNIPER){
                     Room.RemoveEntity(room,entity);
                 }
-                //flamethrower pierces, so don't destroy on collision
+                //flamethrower&shotgun pierces, so don't destroy on collision
             }
         });
         if(entity.position.x<0||entity.position.x>room.terrain.width||
@@ -76,6 +76,15 @@ class Bullet{
         ctx.fillStyle = "#000000";
         if(entity.euqipped==EuqippedKind.WEAPON_FLAMETHROWER){
             ctx.fillStyle = "#FFA366";
+        }
+        if(entity.euqipped==EuqippedKind.WEAPON_MACHINEGUN){
+            ctx.fillStyle = "#CCCCCC";
+        }
+        if(entity.euqipped==EuqippedKind.WEAPON_SHOTGUN){
+            ctx.fillStyle = "#FF0000";
+        }
+        if(entity.euqipped==EuqippedKind.WEAPON_SNIPER){
+            ctx.fillStyle = "#FFFFFF";
         }
         ctx.fillRect(entity.position.x,entity.position.y,entity.size.x,entity.size.y);
     }
