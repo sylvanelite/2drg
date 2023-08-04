@@ -268,22 +268,25 @@ class Player{
         //NOTE: review timer doesn't reset if you leave...
         const controls =Game.inputs.get(entity.uid);
         //see if you are on top of a downed player, and try and revive them
-        Collision.checkCollisions(room,entity,(collisionId:number)=>{
-            const ent = room.entities[collisionId];
-            if(ent.kind == EntityKind.Player&&ent.uid!=entity.uid&&ent.hp<=0){
+        if(Game.gameInstance && Game.gameInstance.playerConfig){
+            for(const [uid,p] of Game.gameInstance.playerLiveCount){
+                if(uid==entity.uid){continue;}//don't revive self
+                if(p.roomIdx!=room.idx){continue;}//don't revive players in another room
+                const ent = room.entities[p.roomId];
+                if(!Collision.touches(entity,ent)){continue;}//don't revive if not nearby
+                if(ent.hp>0){continue;}//don't revive if not downed
                 if(controls&&NetplayInput.getPressed(controls,CONTROLS.MINE)){
-                    const cfg = Game.gameInstance.playerLiveCount.get(ent.uid);
-                    if(cfg){
-                        cfg.reviveCount+=1;
-                        if(cfg.reviveCount>=30){//takes a certain number of tries to revive
-                            cfg.reviveCount=0;
-                            ent.hp=33;
+                        const cfg = Game.gameInstance.playerLiveCount.get(ent.uid);
+                        if(cfg){
+                            cfg.reviveCount+=1;
+                            if(cfg.reviveCount>=30){//takes a certain number of tries to revive
+                                cfg.reviveCount=0;
+                                ent.hp=33;
+                            }
                         }
                     }
                 }
-                
-            }
-        });
+        }
     }
     static update(room:Room,entity:Entity) {
         entity.velocity.x = 0;
