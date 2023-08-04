@@ -161,7 +161,7 @@ describe("test playerIds",function(){
     
     it("player swap and pop",async function() {
         //add 2 players, one at id 10, anther at the end of the array (to be popped)
-        //asset that removing id 10 retains the correct player entity IDs
+        //asset that removing id 10 move id at the end from 99 to 10
         const room = new Room();
         for(let i=0;i<100;i+=1){
             const e = new Entity();
