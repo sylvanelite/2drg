@@ -1,6 +1,4 @@
 node_modules/**
 coverage/**
-media/**
 package-lock.json
-build/**
 tsconfig.tsbuildinfo

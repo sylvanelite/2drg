@@ -1,0 +1,434 @@
+import { NetplayInput } from "../netPeer/netplayInput.mjs";
+import { xyToIdx, CONTROLS, EntityKind, PRNG, EuqippedKind } from "../types.mjs";
+import { Collision, Entity } from "../Entity.mjs";
+import { Room } from "../Room.mjs";
+import { Terrain } from "../Terrain.mjs";
+import { Game } from '../Game.mjs';
+import { ImageCache } from "../ImageCache.mjs";
+import { sprites } from "../sprites.mjs";
+import { PlayerConfig } from "../Config/PlayerConfig.mjs";
+const PLAYER_SPRITE = {
+    STANDING_LEFT: 0,
+    STANDING_RIGHT: 1,
+    MOVING_LEFT: 2,
+    MOVING_RIGHT: 3,
+    JUMPING_LEFT: 4,
+    JUMPING_RIGHT: 5,
+    FALLING_LEFT: 6,
+    FALLING_RIGHT: 7
+};
+class Player {
+    static #updateControls(room, entity) {
+        if (entity.hp <= 0) {
+            return;
+        }
+        const controls = Game.inputs.get(entity.uid);
+        const max_h_speed = 1;
+        if (NetplayInput.getPressed(controls, CONTROLS.LEFT)) {
+            entity.velocity.x = -max_h_speed;
+        }
+        if (NetplayInput.getPressed(controls, CONTROLS.RIGHT)) {
+            entity.velocity.x = max_h_speed;
+        }
+        if (entity.velocity.x != 0) {
+            for (let i = 0; i < max_h_speed; i += 1) {
+                if (entity.velocity.x < 0) {
+                    if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, 1, 1)) {
+                        entity.position.x -= 1;
+                        if (Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, 1, 1) &&
+                            !Terrain.hitTest(room.terrain, entity.position.x, entity.position.y - 1, 1, 1)) {
+                            entity.position.y -= 1;
+                        }
+                    }
+                }
+                else {
+                    if (!Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y, 1, 1)) {
+                        entity.position.x += 1;
+                        if (Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y + entity.size.y, 1, 1) &&
+                            !Terrain.hitTest(room.terrain, entity.position.x + entity.size.x, entity.position.y - 1, 1, 1)) {
+                            entity.position.y -= 1;
+                        }
+                    }
+                }
+            }
+        }
+        if (NetplayInput.getPressed(controls, CONTROLS.JUMP)) {
+            entity.velocity.y = -2;
+        }
+    }
+    static #updateGravity(room, entity) {
+        entity.velocity.y += 1;
+        if (entity.velocity.y > 2) {
+            entity.velocity.y = 2;
+        }
+        if (entity.velocity.y > 0) {
+            for (let i = 0; i < entity.velocity.y; i += 1) {
+                if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y + entity.size.y, entity.size.x, 1)) {
+                    entity.position.y += 1;
+                }
+                else {
+                    entity.velocity.y = 0;
+                }
+            }
+        }
+        else {
+            for (let i = 0; i < Math.abs(entity.velocity.y); i += 1) {
+                if (!Terrain.hitTest(room.terrain, entity.position.x, entity.position.y, entity.size.x, 1)) {
+                    entity.position.y -= 1;
+                }
+                else {
+                    entity.velocity.y = 0;
+                }
+            }
+        }
+    }
+    static #updateSprites(room, entity) {
+        if (entity.velocity.x == 0 && entity.velocity.y == 0) {
+            if (entity.sprite == PLAYER_SPRITE.MOVING_LEFT ||
+                entity.sprite == PLAYER_SPRITE.FALLING_LEFT ||
+                entity.sprite == PLAYER_SPRITE.JUMPING_LEFT) {
+                entity.sprite = PLAYER_SPRITE.STANDING_LEFT;
+            }
+            if (entity.sprite == PLAYER_SPRITE.MOVING_RIGHT ||
+                entity.sprite == PLAYER_SPRITE.FALLING_RIGHT ||
+                entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT) {
+                entity.sprite = PLAYER_SPRITE.STANDING_RIGHT;
+            }
+        }
+        if (entity.velocity.y == 0 || entity.velocity.y == 1) {
+            if (entity.velocity.x > 0) {
+                entity.sprite = PLAYER_SPRITE.MOVING_RIGHT;
+            }
+            if (entity.velocity.x < 0) {
+                entity.sprite = PLAYER_SPRITE.MOVING_LEFT;
+            }
+        }
+        if (entity.velocity.y < 0) {
+            if (entity.sprite == PLAYER_SPRITE.MOVING_LEFT ||
+                entity.sprite == PLAYER_SPRITE.FALLING_LEFT ||
+                entity.sprite == PLAYER_SPRITE.STANDING_LEFT ||
+                entity.velocity.x < 0) {
+                entity.sprite = PLAYER_SPRITE.JUMPING_LEFT;
+            }
+            if (entity.sprite == PLAYER_SPRITE.MOVING_RIGHT ||
+                entity.sprite == PLAYER_SPRITE.FALLING_RIGHT ||
+                entity.sprite == PLAYER_SPRITE.STANDING_RIGHT ||
+                entity.velocity.x > 0) {
+                entity.sprite = PLAYER_SPRITE.JUMPING_RIGHT;
+            }
+        }
+        if (entity.velocity.y > 1) {
+            if (entity.sprite == PLAYER_SPRITE.MOVING_LEFT ||
+                entity.sprite == PLAYER_SPRITE.JUMPING_LEFT ||
+                entity.sprite == PLAYER_SPRITE.STANDING_LEFT ||
+                entity.velocity.x < 0) {
+                entity.sprite = PLAYER_SPRITE.FALLING_LEFT;
+            }
+            if (entity.sprite == PLAYER_SPRITE.MOVING_RIGHT ||
+                entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT ||
+                entity.sprite == PLAYER_SPRITE.STANDING_RIGHT ||
+                entity.velocity.x > 0) {
+                entity.sprite = PLAYER_SPRITE.FALLING_RIGHT;
+            }
+        }
+    }
+    static #updateRooms(room, entity) {
+        const buffer = 3;
+        let didMove = false;
+        if (entity.position.x < 0 && room.x > 0 && !room.locked_L) {
+            const idx = xyToIdx(room.x - 1, room.y, Game.gameInstance.worldSize);
+            const targetRoom = Game.gameInstance.rooms[idx];
+            Room.MoveEntity(room, targetRoom, entity);
+            didMove = true;
+            entity.position.x = room.terrain.width - entity.size.x - buffer;
+            if (entity.uid == Game.gameInstance.playerUid) {
+                Game.gameInstance.currentRoom = idx;
+            }
+        }
+        if (entity.position.x + entity.size.x > room.terrain.width && room.x < Game.gameInstance.worldSize - 1 && !room.locked_R) {
+            const idx = xyToIdx(room.x + 1, room.y, Game.gameInstance.worldSize);
+            const targetRoom = Game.gameInstance.rooms[idx];
+            Room.MoveEntity(room, targetRoom, entity);
+            didMove = true;
+            entity.position.x = buffer;
+            if (entity.uid == Game.gameInstance.playerUid) {
+                Game.gameInstance.currentRoom = idx;
+            }
+        }
+        if (entity.position.y < 0 && room.y > 0 && !room.locked_U) {
+            const idx = xyToIdx(room.x, room.y - 1, Game.gameInstance.worldSize);
+            const targetRoom = Game.gameInstance.rooms[idx];
+            Room.MoveEntity(room, targetRoom, entity);
+            didMove = true;
+            entity.position.y = room.terrain.height - entity.size.y - buffer;
+            if (entity.uid == Game.gameInstance.playerUid) {
+                Game.gameInstance.currentRoom = idx;
+            }
+        }
+        if (entity.position.y + entity.size.y > room.terrain.height && room.y < Game.gameInstance.worldSize - 1 && !room.locked_D) {
+            const idx = xyToIdx(room.x, room.y + 1, Game.gameInstance.worldSize);
+            const targetRoom = Game.gameInstance.rooms[idx];
+            Room.MoveEntity(room, targetRoom, entity);
+            didMove = true;
+            entity.position.y = buffer;
+            if (entity.uid == Game.gameInstance.playerUid) {
+                Game.gameInstance.currentRoom = idx;
+            }
+        }
+        if (entity.position.x < 0) {
+            entity.position.x = 1;
+        }
+        if (entity.position.y < 0) {
+            entity.position.y = 1;
+        }
+        if (entity.position.x + entity.size.x > room.terrain.width) {
+            entity.position.x = room.terrain.width - entity.size.x - 1;
+        }
+        if (entity.position.y + entity.size.y > room.terrain.height) {
+            entity.position.y = room.terrain.height - entity.size.y - 1;
+        }
+        return didMove;
+    }
+    static #updateShoot(room, entity) {
+        const controls = Game.inputs.get(entity.uid);
+        if (entity.cooldown > 0) {
+            entity.cooldown -= 1;
+        }
+        if (entity.hp > 0 && controls.mousePosition && NetplayInput.getPressed(controls, CONTROLS.SHOOT)) {
+            if (entity.cooldown == 0) {
+                const mousePos = controls.mousePosition;
+                const bulletEntity = new Entity();
+                bulletEntity.kind = EntityKind.Bullet;
+                bulletEntity.euqipped = entity.euqipped;
+                bulletEntity.size.x = 2;
+                bulletEntity.size.y = 2;
+                bulletEntity.position.x = entity.position.x;
+                bulletEntity.position.y = entity.position.y;
+                const aimingAngleRads = Math.atan2(mousePos.y - entity.position.y, mousePos.x - entity.position.x);
+                switch (entity.euqipped) {
+                    case EuqippedKind.WEAPON_FLAMETHROWER: {
+                        entity.cooldown = 1;
+                        bulletEntity.hp = 3;
+                        bulletEntity.cooldown = 20;
+                        const spreadAngle = 3 / (180 / Math.PI);
+                        const spread = PRNG.prng() * spreadAngle - PRNG.prng() * spreadAngle;
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads + spread) * (1 + PRNG.prng() * 3);
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads + spread) * (1 + PRNG.prng() * 3);
+                        Room.AddEntity(room, bulletEntity);
+                        break;
+                    }
+                    case EuqippedKind.WEAPON_MACHINEGUN: {
+                        entity.cooldown = 5;
+                        bulletEntity.hp = 15;
+                        bulletEntity.cooldown = 100;
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads) * 4;
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads) * 4;
+                        Room.AddEntity(room, bulletEntity);
+                        break;
+                    }
+                    case EuqippedKind.WEAPON_SNIPER: {
+                        entity.cooldown = 50;
+                        bulletEntity.hp = 50;
+                        bulletEntity.cooldown = 100;
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads) * 6;
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads) * 6;
+                        Room.AddEntity(room, bulletEntity);
+                        break;
+                    }
+                    case EuqippedKind.WEAPON_SHOTGUN: {
+                        entity.cooldown = 20;
+                        bulletEntity.hp = 20;
+                        bulletEntity.cooldown = 10;
+                        bulletEntity.velocity.x = Math.cos(aimingAngleRads) * 3;
+                        bulletEntity.velocity.y = Math.sin(aimingAngleRads) * 3;
+                        Room.AddEntity(room, bulletEntity);
+                        for (let i = 1; i < 3; i += 1) {
+                            const spread = new Entity();
+                            spread.kind = EntityKind.Bullet;
+                            spread.euqipped = entity.euqipped;
+                            spread.position.x = bulletEntity.position.x + i * 2;
+                            spread.position.y = bulletEntity.position.y + i * 2;
+                            spread.size.x = 2;
+                            spread.size.y = 2;
+                            spread.velocity.x = Math.cos(aimingAngleRads) * (1 + PRNG.prng() * 3);
+                            spread.velocity.y = Math.sin(aimingAngleRads) * (1 + PRNG.prng() * 3);
+                            Room.AddEntity(room, spread);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    static #updateMine(room, entity) {
+        const controls = Game.inputs.get(entity.uid);
+        if (entity.secondaryCooldown > 0) {
+            entity.secondaryCooldown -= 1;
+        }
+        if (entity.hp > 0 && entity.secondaryCooldown == 0 && NetplayInput.getPressed(controls, CONTROLS.MINE)) {
+            entity.secondaryCooldown = 10;
+            const mineEntity = new Entity();
+            mineEntity.kind = EntityKind.Bullet;
+            mineEntity.euqipped = EuqippedKind.WEAPON_MINE;
+            mineEntity.size.x = 2;
+            mineEntity.size.y = 2;
+            mineEntity.position.x = entity.position.x + Math.floor(entity.size.x / 2);
+            mineEntity.position.y = entity.position.y + Math.floor(entity.size.y / 2);
+            mineEntity.cooldown = 1;
+            mineEntity.hp = 3;
+            Room.AddEntity(room, mineEntity);
+        }
+    }
+    static #updateRevive(room, entity) {
+        if (entity.hp <= 0) {
+            return;
+        }
+        const controls = Game.inputs.get(entity.uid);
+        if (Game.gameInstance && Game.gameInstance.playerConfig) {
+            for (const [uid, p] of Game.gameInstance.playerLiveCount) {
+                if (uid == entity.uid) {
+                    continue;
+                }
+                if (p.roomIdx != room.idx) {
+                    continue;
+                }
+                const ent = room.entities[p.roomId];
+                if (!Collision.touches(entity, ent)) {
+                    continue;
+                }
+                if (ent.hp > 0) {
+                    continue;
+                }
+                if (controls && NetplayInput.getPressed(controls, CONTROLS.MINE)) {
+                    const cfg = Game.gameInstance.playerLiveCount.get(ent.uid);
+                    if (cfg) {
+                        cfg.reviveCount += 1;
+                        if (cfg.reviveCount >= 30) {
+                            cfg.reviveCount = 0;
+                            ent.hp = 33;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    static update(room, entity) {
+        entity.velocity.x = 0;
+        entity.spriteFrame += 0.2;
+        entity.spriteFrame %= 2;
+        Player.#updateControls(room, entity);
+        Player.#updateGravity(room, entity);
+        Player.#updateSprites(room, entity);
+        const didMove = Player.#updateRooms(room, entity);
+        if (!didMove) {
+            Player.#updateShoot(room, entity);
+            Player.#updateMine(room, entity);
+            Player.#updateRevive(room, entity);
+        }
+    }
+    static draw(ctx, entity) {
+        const image = ImageCache.getImage("./media/sprites.png");
+        if (!image.loaded) {
+            return;
+        }
+        let spr_stand1 = sprites.driller_stand1;
+        let spr_stand2 = sprites.driller_stand2;
+        let spr_jet1 = sprites.driller_jet1;
+        let spr_jet2 = sprites.driller_jet2;
+        let spr_fall1 = sprites.driller_fall1;
+        let spr_fall2 = sprites.driller_fall2;
+        let spr = spr_stand1;
+        const chCl = Game.gameInstance.playerConfig.get(entity.uid)?.chosenClass;
+        if (chCl == PlayerConfig.CLASSES.DRILLER) {
+            spr_stand1 = sprites.driller_stand1;
+            spr_stand2 = sprites.driller_stand2;
+            spr_jet1 = sprites.driller_jet1;
+            spr_jet2 = sprites.driller_jet2;
+            spr_fall1 = sprites.driller_fall1;
+            spr_fall2 = sprites.driller_fall2;
+        }
+        if (chCl == PlayerConfig.CLASSES.ENGINEER) {
+            spr_stand1 = sprites.engineer_stand1;
+            spr_stand2 = sprites.engineer_stand2;
+            spr_jet1 = sprites.engineer_jet1;
+            spr_jet2 = sprites.engineer_jet2;
+            spr_fall1 = sprites.engineer_fall1;
+            spr_fall2 = sprites.engineer_fall2;
+        }
+        if (chCl == PlayerConfig.CLASSES.SCOUT) {
+            spr_stand1 = sprites.scout_stand1;
+            spr_stand2 = sprites.scout_stand2;
+            spr_jet1 = sprites.scout_jet1;
+            spr_jet2 = sprites.scout_jet2;
+            spr_fall1 = sprites.scout_fall1;
+            spr_fall2 = sprites.scout_fall2;
+        }
+        if (chCl == PlayerConfig.CLASSES.GUNNER) {
+            spr_stand1 = sprites.gunner_stand1;
+            spr_stand2 = sprites.gunner_stand2;
+            spr_jet1 = sprites.gunner_jet1;
+            spr_jet2 = sprites.gunner_jet2;
+            spr_fall1 = sprites.gunner_fall1;
+            spr_fall2 = sprites.gunner_fall2;
+        }
+        let flipX = false;
+        if (entity.sprite == PLAYER_SPRITE.STANDING_LEFT) {
+            spr = spr_stand1;
+            flipX = true;
+        }
+        if (entity.sprite == PLAYER_SPRITE.STANDING_RIGHT) {
+            spr = spr_stand1;
+            flipX = false;
+        }
+        if (entity.sprite == PLAYER_SPRITE.MOVING_LEFT) {
+            spr = Math.floor(entity.spriteFrame) == 0 ?
+                spr_stand1 :
+                spr_stand2;
+            flipX = true;
+        }
+        if (entity.sprite == PLAYER_SPRITE.MOVING_RIGHT) {
+            spr = Math.floor(entity.spriteFrame) == 0 ?
+                spr_stand1 :
+                spr_stand2;
+            flipX = false;
+        }
+        if (entity.sprite == PLAYER_SPRITE.JUMPING_LEFT) {
+            spr = Math.floor(entity.spriteFrame) == 0 ?
+                spr_jet1 :
+                spr_jet2;
+            flipX = true;
+        }
+        if (entity.sprite == PLAYER_SPRITE.JUMPING_RIGHT) {
+            spr = Math.floor(entity.spriteFrame) == 0 ?
+                spr_jet1 :
+                spr_jet2;
+            flipX = false;
+        }
+        if (entity.sprite == PLAYER_SPRITE.FALLING_LEFT) {
+            spr = Math.floor(entity.spriteFrame) == 0 ?
+                spr_fall1 :
+                spr_fall2;
+            flipX = true;
+        }
+        if (entity.sprite == PLAYER_SPRITE.FALLING_RIGHT) {
+            spr = Math.floor(entity.spriteFrame) == 0 ?
+                spr_fall1 :
+                spr_fall2;
+            flipX = false;
+        }
+        if (entity.hp <= 0) {
+            spr = spr_fall2;
+        }
+        ImageCache.drawTile(ctx, image, entity.position.x, entity.position.y, spr.x, spr.y, spr.w, spr.h, flipX, false);
+        if (entity.secondaryCooldown > 0) {
+            if (entity.secondaryCooldown > 5) {
+                ImageCache.drawTile(ctx, image, entity.position.x, entity.position.y, sprites.mine1.x, sprites.mine1.y, sprites.mine1.w, sprites.mine1.h, flipX, false);
+            }
+            else {
+                ImageCache.drawTile(ctx, image, entity.position.x, entity.position.y, sprites.mine2.x, sprites.mine2.y, sprites.mine2.w, sprites.mine2.h, flipX, false);
+            }
+        }
+    }
+}
+export { Player, PLAYER_SPRITE };
+//# sourceMappingURL=Player.mjs.map
