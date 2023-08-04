@@ -57,6 +57,7 @@ class Room{
     static RemoveEntity(room:Room,entity:Entity){
         const idxToRemove = entity.roomId;
         if(idxToRemove==-1){return;}//entity was already destroyed earlier
+        if(entity.kind==EntityKind.Player){room.players.delete(entity.roomId);}//remove the player id first, so that if it's swapped the swap isn't removed
         const lastEnt = room.entities[room.maxEntities-1];
         if(lastEnt.roomId!= entity.roomId){//if it's already at the end, can skip the swap
             if(lastEnt.kind==EntityKind.Player){//if swapping with a player, update tracking 
@@ -77,7 +78,6 @@ class Room{
                 
             }
         }
-        if(entity.kind==EntityKind.Player){room.players.delete(entity.roomId);}
         entity.roomId = -1;
         if(room.maxEntities>0){
             room.maxEntities-=1;

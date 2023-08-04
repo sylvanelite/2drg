@@ -159,5 +159,26 @@ describe("test playerIds",function(){
         }
     });
     
+    it("player swap and pop",async function() {
+        //add 2 players, one at id 10, anther at the end of the array (to be popped)
+        //asset that removing id 10 retains the correct player entity IDs
+        const room = new Room();
+        for(let i=0;i<100;i+=1){
+            const e = new Entity();
+            if(i==10||i==99){
+                e.kind = EntityKind.Player;
+            }
+            Room.AddEntity(room,e);
+        }
+        expect(room.players.has(10)).toBe(true);
+        expect(room.players.has(99)).toBe(true);
+        expect(room.maxEntities).toBe(100);
+        expect(room.entities[room.maxEntities-1].roomId).toBe(99);
+
+        Room.RemoveEntity(room,room.entities[10]);
+        expect(room.players.has(10)).toBe(true);
+        expect(room.players.has(99)).not.toBe(true);
+    });
+    
     
 });
