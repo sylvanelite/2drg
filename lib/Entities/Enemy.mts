@@ -16,10 +16,10 @@ class Enemy{
             //add random amount so enemeies that are stacked have variance
             entity.cooldown+=6+Math.floor(PRNG.prng()*3);
             let attack = 5;
-            if(entity.euqipped = EuqippedKind.ENEMY_GRUNT){
+            if(entity.euqipped == EuqippedKind.ENEMY_GRUNT){
                 attack=5;
             }
-            if(entity.euqipped = EuqippedKind.ENEMY_WINGED){
+            if(entity.euqipped == EuqippedKind.ENEMY_WINGED){
                 attack=2;
             }
             //deal damage to players
