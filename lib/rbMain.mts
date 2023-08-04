@@ -133,7 +133,7 @@ class RbMain extends NW{
             }
         }
     }
-    static begin(self:RbMain,config:PlayerConfig){//TOOD: should only the host be able to start???
+    static begin(self:RbMain,config:PlayerConfig,mission:ResourceConfig){//TOOD: should only the host be able to start???
         if(self.joined.size<1){
             RbMain.messageCallback("not enough remove players");
             console.log("not enough remote players",self.joined);
@@ -163,7 +163,7 @@ class RbMain extends NW{
         }
         
         //--send initial telegraph status to all clients
-        const mission = new ResourceConfig();
+        if(!mission){mission = new ResourceConfig();}
         const msg = {allPlayers,numPlayers,mission};
         self.send({
             kind:'begin',data:msg

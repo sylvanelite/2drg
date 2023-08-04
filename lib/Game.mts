@@ -268,6 +268,8 @@ class Game extends NetplayState{
             const playerEntity = new Entity();
             playerEntity.hp = playerEntity.maxHp;
             playerEntity.kind = EntityKind.Player;
+            playerEntity.position.x=Math.floor(startingRoom.terrain.width/2);
+            playerEntity.position.y=Math.floor(startingRoom.terrain.height/4);
             if(playerEntity.uid == playerId){
                 //note: 'if' is not really needed. Could instead write this.playerUid = playerId outside the loop
                 //the 'if' is really only used so that in case the entity is NOT created, 

@@ -16,6 +16,7 @@
 		window.readyUp=(config)=>{RbMain.readyUp(main,config);};
         //
         import {PlayerConfig} from './build/lib/Config/PlayerConfig.mjs';
+        import {ResourceConfig} from './build/lib/Config/ResourceConfig.mjs';
 
         const init = ()=>{
             const div = document.getElementById("host");
@@ -61,7 +62,21 @@
             btnBegin.onclick = ()=>{
                 canvas.classList.remove("hidden");
                 div.classList.add("hidden");
-                RbMain.begin(main,{chosenClass:getChCl()});
+                const mission = {
+                    chosenPrimary:ResourceConfig.PRIMARY_OBJECTIVE.MINING_EXPEDITION,
+                    chosenSecondary:ResourceConfig.SECONDARY_OBJECTIVE.FOSSIL,
+                    seed:Math.floor(Math.random()*10000),
+                    goalPrimary:20,
+                    goalSecondary:10
+                };
+                const rng = Math.random();
+                if(rng>0.3){
+                    mission.chosenPrimary=ResourceConfig.PRIMARY_OBJECTIVE.EGG_HUNT;
+                }
+                if(rng>0.6){
+                    mission.chosenPrimary=ResourceConfig.PRIMARY_OBJECTIVE.POINT_EXTRACTION;
+                }
+                RbMain.begin(main,{chosenClass:getChCl()},mission);
             };
             btnReady.onclick = ()=>{
                 canvas.classList.remove("hidden");
