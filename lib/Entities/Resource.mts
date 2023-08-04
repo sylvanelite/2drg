@@ -17,6 +17,7 @@ class Resource{
     static collectResource(room:Room,entity:Entity){
         if(entity.sprite == EuqippedKind.RESOURCE_BISMORE_BOTTOM||
             entity.sprite == EuqippedKind.RESOURCE_BISMORE_TOP){
+                Conductor.TiggerWave(room,EuqippedKind.WAVE_LOCKED_ROOM);
             Game.gameInstance.resourceLiveCount.bismore+=1;
         }
         if(entity.sprite == EuqippedKind.RESOURCE_CROPPA_TOP||
@@ -48,6 +49,7 @@ class Resource{
                 Game.gameInstance.resourceLiveCount.gold+=1;
         }
         if(entity.sprite == EuqippedKind.RESOURCE_AQUARQ){
+            Conductor.TiggerWave(room,EuqippedKind.WAVE_LOCKED_ROOM);
             Game.gameInstance.resourceLiveCount.aquarq+=1;
         }
         if(entity.euqipped == EuqippedKind.RESOURCE_EGG){
