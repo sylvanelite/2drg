@@ -248,7 +248,7 @@ class Player{
             entity.secondaryCooldown-=1;
         }
         if (entity.hp>0&&entity.secondaryCooldown==0&&NetplayInput.getPressed(controls,CONTROLS.MINE)) {
-            entity.secondaryCooldown=10;
+            entity.secondaryCooldown=10;//if chaning update draw as well
             const mineEntity = new Entity();
             mineEntity.kind = EntityKind.Bullet;
             mineEntity.euqipped = EuqippedKind.WEAPON_MINE;//bullet type match the weapon that shot it
@@ -396,6 +396,15 @@ class Player{
         }
         ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
             spr.x,spr.y,spr.w,spr.h,flipX,false);
+        if(entity.secondaryCooldown>0){//non-zero mining cooldown, means draw mining anim 
+            if(entity.secondaryCooldown>5){
+                ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
+                    sprites.mine1.x,sprites.mine1.y,sprites.mine1.w,sprites.mine1.h,flipX,false);
+            }else{
+                ImageCache.drawTile(ctx,image,entity.position.x,entity.position.y,
+                    sprites.mine2.x,sprites.mine2.y,sprites.mine2.w,sprites.mine2.h,flipX,false);
+            }
+        }
     }
 }
 export {Player,PLAYER_SPRITE}//PLAYER_SPRITE is only exported for tests

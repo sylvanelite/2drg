@@ -20,6 +20,12 @@ const sprites = {
     },ammo:{
         x:5*8,y:0*8,
         w:8,h:8
+    },mine1:{
+        x:6*8,y:0*8,
+        w:8,h:8
+    },mine2:{
+        x:7*8,y:0*8,
+        w:8,h:8
     },
     driller_stand2:{
         x:0*8,y:1*8,
